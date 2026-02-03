@@ -91,7 +91,7 @@
   - [x] **Task-537: 体验优化与逻辑修复** (2026-02-02)
     - 修复工作区移除文件逻辑：移除时保留 Sidebar 条目但清空数据（金额、用途）。
     - 优化自动摘要：修复了用途修改后凭单摘要不更新的问题。
-    - UI 细节：缩小凭单号间距，缩短报销人下划线，默认缩放调整为 90%。
+    - UI 细节：缩小凭单号间距，缩短报销人下划线，默认缩放调整为 85%。
     - 侧边栏：区分“移出工作区”与“永久删除”操作。
   - [x] **Task-205: 应用模式切换 (Invoice Mode)** (2026-02-02)
     - 实现了 `AppMode` 状态管理 (Payment / Invoice) 及持久化。
@@ -126,15 +126,53 @@
     - 解决了画布内容裁剪问题，优化了滚动容器。
     - 实现了导出预览窗口 (PDF Preview Modal)，支持预览后下载。
     - 验证了所有布局模式下的导出尺寸正确性。
+
+- **2026-02-03**: 完成了右侧属性面板重构 (Task-702)。
+    - **Component Extraction**: 将属性面板逻辑抽取为独立组件 `PropertiesPanel`，改善了 `Layout` 的代码结构。
+    - **Voucher Settings**: 实现了完整的凭单设置表单，支持直接在侧边栏编辑标题、日期、报销人、部门及摘要，并显示实时的总金额。
+    - **Visibility Toggle**: 添加了 "Show Voucher" 开关，允许用户隐藏凭单头部。
+    - **Dynamic Layout**: 更新了网格计算引擎，当凭单隐藏时，第一页自动移除顶部偏移，充分利用空间。
+    - **UI Components**: 手动实现了 `Switch` 和 `Separator` 组件以支持新的面板 UI。
+    - **Stability Fix**: 修复了属性面板在 Store 数据初始化时的崩溃问题，增加了空值保护和语法修正。
+    - **Hotfix (Invoice Mode)**: 修复了切换到发票模式时的白屏崩溃问题 (React Hook Rule Violation)，确保了模式切换的稳定性。
+    - **Visibility Logic**: 调整了 "Voucher Settings" 菜单的可见性逻辑，使其在发票模式下也默认显示，便于全剧数据的统一管理。
+    - **Editable Total**: 实现了 "Total Amount" 的可编辑功能。用户手动修改金额后，会自动覆盖计算值，并提供 "Reset" 按钮恢复自动计算。
+    - **UI Polish**: 统一了属性面板中 "Summary" 和 "Total Amount" 的重置按钮样式，使用蓝色 "重置" 按钮替代了原有的文本链接，与画布上的样式保持一致。
+    - **Canvas Interaction**: 实现了凭单画布上 "金额" 栏的直接编辑功能，并添加了与 "用途摘要" 一致的 "重置" 按钮，提升了操作的便捷性和统一性。
+    - **Visual Fix**: 增加了凭单金额列的宽度 (from w-32 to w-40)，解决了数字较长时最后一位显示不全的问题。
+    - **Input Polish**: 微调了 "报销人" 和 "部门/项目" 输入框的下划线长度 (宽度增加)，并将 "部门/项目" 栏整体向右移动 (Align Right)，满足特定视觉需求。
+    - **Panel Layout**: 将属性面板 (Voucher Settings) 中的 "Reimbursant" 和 "Dept/Project" 输入框改为垂直排列 (Vertical Stack)，优化了侧边栏的空间利用和视觉层级。
+    - **Localization**: 将 "Workspace" 页眉及属性面板 (Properties Panel) 中的所有英文标签翻译为中文，实现了界面的全中文显示。
+    - **PDF Modal**: 将导出预览 (Export Preview) 弹窗中的 "Cancel" 和 "Download PDF" 按钮翻译为 "取消" 和 "下载 PDF"，保持语言一致性。
+    - **Clear Function**: Replaced native `confirm` dialog with `shadcn/ui` `AlertDialog` for the "Clear" action. Improved UX and reliability.
+    - **Canvas Display**: Changed the hardcoded "RECEIPT" label on canvas items to display the actual filename (e.g., "Invoice_001.pdf"), with truncation for long names.
+    - **Canvas Display**: Changed the hardcoded "RECEIPT" label on canvas items to display the actual filename (e.g., "Invoice_001.pdf"), with truncation for long names.
+    - **Upload Logic**: Implemented duplicate file detection in `UploadZone`. Attempting to upload a file that already exists now triggers an `AlertDialog` warning and skips the duplicate file. Fixed a bug where the check failed due to stale closure state.
+    - **UTF-8 Support**: Updated duplicate file detection validation to use `normalize('NFC')`. This ensures that filenames with special characters (e.g., Chinese) are correctly identified as duplicates even if the string encoding references differ slightly.
+    - **Voucher Logic**: Updated `clearAllItems` in `useInvoiceStore` to regenerate the `voucherNo` (timestamp-based) when clearing the workspace. This ensures the voucher ID is refreshed for the next usage.
+
 ## 最近更新
 
-- **2026-02-03**: 完成了导出与打印优化 (Task-603)，修复了布局方向与裁剪问题，新增了 PDF 预览。
+- **2026-02-03 (Late)**: 完成了打印与清空功能 (Task-700)。
+    - **Print**: 实现了 `usePrint` Hook，利用隐藏 iframe 调用浏览器打印，复用高清 PDF 导出逻辑。
+    - **Clear**: 实现了全局清空功能，保留凭单头部信息（报销人、日期），需二次确认。
+    - **Clear**: 实现了全局清空功能，保留凭单头部信息（报销人、日期），需二次确认。
+    - **Layout Fix**: 微调了凭单编号 (Voucher No) 的 CSS padding，解决了与下划线重叠的视觉问题。
+- **2026-02-03 (Robustness)**: 完成了去重与逻辑增强 (Task-703)。
+    - **Upload**: 实现了基于 UTF-8 归一化的文件名去重，支持 PDF 页面检测，并添加了友好的 Alert 提示。
+    - **State**: 修复了清空操作后凭单号不更新的问题 (`generateVoucherNo`)。
+    - **UI**: Canvas 卡片现在显示真实文件名。
+- **2026-02-03 (Early)**: 完成了导出与打印优化 (Task-603)，修复了布局方向与裁剪问题，新增了 PDF 预览。
     - **紧急修复**: 解决了 PDF 导出时的渲染问题 (Task-Fix-Rendering)，通过 "Clone & Replace" 策略修复了凭单和文件项 (Amount/Usage) 输入框内容的显示异常，确保导出结果清晰准确。
     - **UI 优化**: 重构了 `FileItem` 组件 (Task-UI-Refine)，实现了标签与输入框同行显示，移除了备注栏，并将 Header 改为悬停显示，最大化图片展示空间。
     - **Voucher 布局精修**: 
         - 隐藏了导出时的“重置”按钮。
         - 优化了表格垂直间距和头部对齐。
         - 确保了签字线下划线在导出时可见。
+- **2026-02-03 (Fixes)**:
+    - **Page Navigator**: Implemented ID-based scroll tracking (`intersectionObserver`) to fix page indicator update issues.
+    - **Build**: Fixed all TypeScript build errors and Layout syntax issues.
+    - **Refinement**: Moved Page Navigator to Header for better accessibility.
 - **2026-02-02**: 完成了 Task-600，实现了多工作区的数据模型基础与全局汇总逻辑。正在进行侧边栏 UI 重构。
 - **2026-02-02**: 完成了 Invoice Mode 的核心开发与验证，支持了纯报销单模式下的多种布局策略。
 - **2026-01-30**：确认了网格布局的自动填坑 (Dense Packing) 策略。初始化了文档。

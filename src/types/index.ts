@@ -52,11 +52,14 @@ export interface VoucherData {
   receiver: string;    // 受款人
   summary: string;     // 用途摘要
   isSummaryDirty: boolean; // 是否手动修改过摘要
+  totalAmountOverride?: number; // 手动修改的总金额
 }
 
 export type InvoiceState = {
   items: InvoiceItem[];
   voucherData: VoucherData;
+  isVoucherVisible: boolean;
+  toggleVoucherVisibility: (visible?: boolean) => void;
   addItems: (items: Omit<InvoiceItem, keyof BaseEntity>[]) => void;
   addItem: (item: Omit<InvoiceItem, keyof BaseEntity>) => void;
   removeItem: (id: string, hardDelete?: boolean) => void;
@@ -68,6 +71,7 @@ export type InvoiceState = {
   
   // New actions & selectors
   resetSummary: () => void;
+  clearAllItems: () => void;
   getTotalAmount: () => number;
   getAutoSummary: () => string;
   

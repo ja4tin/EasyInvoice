@@ -41,7 +41,7 @@ export function FileItem({
         className="absolute top-0 inset-x-0 z-20 h-7 bg-white/95 backdrop-blur-sm border-b border-slate-100 flex items-center justify-between px-2 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity duration-200"
         {...dragHandleProps}
       >
-         <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Receipt</span>
+         <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider truncate max-w-[120px]" title={data.name}>{data.name || 'RECEIPT'}</span>
          {/* Hover Actions */}
          <div className="flex gap-1">
             {onMove && (

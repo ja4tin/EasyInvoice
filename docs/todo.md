@@ -178,34 +178,45 @@
 
 本阶段实现用户反馈的高频交互功能，包括打印、清空、导航及属性面板增强。
 
-- [ ] **Task-700: 打印与清空功能 (Print & Clear)**
+- [x] **Task-700: 打印与清空功能 (Print & Clear)**
     - **依赖**: Task-603
     - **上下文**: 实现顶部工具栏的快捷操作。
     - **子任务**:
-        - [ ] 700.1: 封装 `usePrint`：复用 `useExportPdf` 生成的 Blob，在隐藏 iframe 中调用 `window.print()`。
-        - [ ] 700.2: 在 Header 实现 "打印" 按钮 (与导出一致的图标风格)。
-        - [ ] 700.3: 实现 Store Action `clearAllItems`：清空文件列表和金额，但**保留**凭单头部信息（公司/人名/日期）。
-        - [ ] 700.4: 在 Header 左侧实现 "一键清空" 按钮，并集成 `AlertDialog` 二次确认。
-        - [ ] 700.5: **验证**: 点击清空，文件消失但报销人还在；点击打印，弹出系统打印对话框且内容清晰。
+        - [x] 700.1: 封装 `usePrint`：复用 `useExportPdf` 生成的 Blob，在隐藏 iframe 中调用 `window.print()`。
+        - [x] 700.2: 在 Header 实现 "打印" 按钮 (与导出一致的图标风格)。
+        - [x] 700.3: 实现 Store Action `clearAllItems`：清空文件列表和金额，但**保留**凭单头部信息（公司/人名/日期）。
+        - [x] 700.4: 在 Header 左侧实现 "一键清空" 按钮，并集成 `AlertDialog` 二次确认。
+        - [x] 700.5: **验证**: 点击清空，文件消失但报销人还在；点击打印，弹出系统打印对话框且内容清晰。
 
-- [ ] **Task-701: 页面定位器 (Page Navigator)**
+- [x] **Task-701: 页面定位器 (Page Navigator)**
     - **依赖**: Task-301
     - **上下文**: 方便用户在多页文档中快速跳转。
     - **子任务**:
-        - [ ] 701.1: 创建 `PageNavigator` 悬浮胶囊组件。
-        - [ ] 701.2: 监听 Store 或 Layout 计算总页数 (Total Pages)。
-        - [ ] 701.3: 实现点击 `Page N` -> 滚动容器 `scrollTo` 到对应高度的逻辑。
-        - [ ] 701.4: **验证**: 上传 20 张图生成 4 页，点击 Page 4，视图平滑滚动到底部。
+        - [x] 701.1: 创建 `PageNavigator` 悬浮胶囊组件。
+        - [x] 701.2: 监听 Store 或 Layout 计算总页数 (Total Pages)。
+        - [x] 701.3: 实现点击 `Page N` -> 滚动容器 `scrollTo` 到对应高度的逻辑。
+        - [x] 701.4: **验证**: 上传 20 张图生成 4 页，点击 Page 4，视图平滑滚动到底部。
 
-- [ ] **Task-702: 右侧属性面板重构 (Properties Panel v2)**
+- [x] **Task-702: 右侧属性面板重构 (Properties Panel v2)**
     - **依赖**: Task-400
     - **上下文**: 增强右侧面板的实用性，支持凭单编辑与显隐控制。
     - **子任务**:
-        - [ ] 702.1: 重构 `PropertiesPanel` 布局：引入 `Accordion` 或 Split View，分为 "凭单设置" 和 "选中项属性"。
-        - [ ] 702.2: 实现 "凭单设置" 表单：绑定 Store 中的 `voucherData` (日期/摘要/金额/报销人等)。
-        - [ ] 702.3: 实现 "显示付款凭单" Checkbox 开关 & Store 状态 `isVoucherVisible`。
-        - [ ] 702.4: **核心算法**: 更新 `useGridLayout`，当 `isVoucherVisible=false` 时，移除第一页的 Top Offset，使网格从顶端开始排列。
-        - [ ] 702.5: **验证**: 取消勾选凭单，Voucher 消失，第一张图片顶上去；右侧修改金额，中间画布实时变化。
+        - [x] 702.1: 重构 `PropertiesPanel` 布局：使用 ScrollArea 与 Separator 分区。
+        - [x] 702.2: 实现 "凭单设置" 表单：绑定 Store 中的 `voucherData` (日期/摘要/金额/报销人等)。
+        - [x] 702.3: 实现 "显示付款凭单" Checkbox 开关 & Store 状态 `isVoucherVisible`。
+        - [x] 702.5: **验证**: 取消勾选凭单，Voucher 消失，第一张图片顶上去；右侧修改金额，中间画布实时变化。
+
+- [x] **Task-703: 鲁棒性与体验优化 (Robustness & UX)**
+    - **依赖**: Task-300, Task-700
+    - **上下文**: 解决测试中发现的边缘情况与体验痛点。
+    - **子任务**:
+        - [x] 703.1: **上传去重 (Deduplication)**:
+            - 实现文件名 UTF-8 归一化 (NFC) 以支持中文文件名比对。
+            - 增加 PDF 页面命名规则检测，防止同名 PDF 重复解析。
+            - 集成 `AlertDialog` 提示重复文件跳过。
+        - [x] 703.2: **凭单逻辑 (Voucher Logic)**:
+            - 更新 `clearAllItems`，在清空时基于当前时间戳重新生成 `voucherNo`，防止ID重复。
+        - [x] 703.3: **Canvas 显示**: 将 Canvas Item 的静态 "RECEIPT" 标签改为显示真实文件名 (截断显示)。
 
 ---
 

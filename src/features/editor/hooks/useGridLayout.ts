@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useInvoiceStore } from '@/store/useInvoiceStore';
+// import { useInvoiceStore } from '@/store/useInvoiceStore';
 import { calculateLayout, type LayoutPosition } from '../utils/grid-layout';
 
 import { type InvoiceItem, type AppMode, type InvoiceLayout } from '@/types';
@@ -15,22 +15,23 @@ export interface UseGridLayoutProps {
   rows?: number;
   appMode?: AppMode;
   invoiceLayout?: InvoiceLayout;
+  isVoucherVisible?: boolean;
 }
 
 export function useGridLayout({ 
   items, 
   appMode = 'payment', 
-  invoiceLayout = 'cross' 
+  invoiceLayout = 'cross',
+  isVoucherVisible = true
 }: UseGridLayoutProps): UseGridLayoutResult {
-  const showVoucher = true; // Still conditionally used inside calculateLayout based on appMode
-
+  
   const layout = useMemo(() => {
     return calculateLayout(items, { 
-      showVoucher, 
+      showVoucher: isVoucherVisible, 
       appMode, 
       invoiceLayout 
     });
-  }, [items, showVoucher, appMode, invoiceLayout]);
+  }, [items, isVoucherVisible, appMode, invoiceLayout]);
 
   return layout;
 }

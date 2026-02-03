@@ -6,8 +6,25 @@ import { Button } from '@/components/ui/button';
 import { UploadZone } from '@/features/upload/components/UploadZone'
 import { UploadedFileList } from '@/features/upload/components/UploadedFileList'
 import { useSettingsStore } from '@/store/useSettingsStore'
+import { useInvoiceStore } from '@/store/useInvoiceStore'
+import { usePrint } from '@/features/editor/hooks/usePrint'
+import { Trash2, Printer } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
+import { PageNavigator } from '@/features/editor/components/PageNavigator'
+import { useGridLayout } from '@/features/editor/hooks/useGridLayout'
+import { PropertiesPanel } from '@/features/editor/components/PropertiesPanel'
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -17,6 +34,18 @@ export const Layout = ({ children }: LayoutProps) => {
   const { appMode, invoiceLayout } = useSettingsStore(state => state.settings);
   const updateSettings = useSettingsStore(state => state.updateSettings);
   const { generatePdfUrl } = useExportPdf();
+  const { print } = usePrint();
+  const items = useInvoiceStore(state => state.items);
+
+  // Calculate total pages for Navigator
+  const canvasItems = items.filter(item => item.workspaceId === appMode);
+  const { totalPages } = useGridLayout({
+    items: canvasItems,
+    columns: 4,
+    rows: 6,
+    appMode,
+    invoiceLayout
+  });
   
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -73,7 +102,7 @@ export const Layout = ({ children }: LayoutProps) => {
            {/* Top Toolbar Placeholder */}
            <div className="flex w-full items-center justify-between">
               <div className="flex items-center gap-4">
-                  <h1 className="font-semibold text-lg">Workspace</h1>
+                  <h1 className="font-semibold text-lg">工作区</h1>
                   <div className="flex items-center bg-muted rounded-lg p-1 h-8">
                       <button 
                         onClick={() => updateSettings({ appMode: 'payment' })}
@@ -95,6 +124,9 @@ export const Layout = ({ children }: LayoutProps) => {
                       </button>
                   </div>
                   
+                  {/* Page Navigator */}
+                  <PageNavigator totalPages={totalPages} />
+
                   {/* Invoice Layout Options (Only show in Invoice mode) */}
                   {appMode === 'invoice' && (
                      <div className="flex items-center gap-2 border-l pl-4 ml-2">
@@ -109,11 +141,47 @@ export const Layout = ({ children }: LayoutProps) => {
                         </select>
                      </div>
                   )}
-              </div>
+               </div>
+              
+
               
 
               <div className="flex items-center gap-2">
                  {/* Right Toolbar actions */}
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          清空
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>确认清空所有内容？</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          此操作将清空所有上传的文件和表单数据，但会保留下次使用的默认设置（如报销人）。此操作无法撤销。
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>取消</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => useInvoiceStore.getState().clearAllItems()} className="bg-destructive hover:bg-destructive/90">
+                          确认清空
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
+                 <div className="h-4 w-[1px] bg-border mx-1" />
+
+                 <Button variant="outline" size="sm" onClick={print}>
+                    <Printer className="w-4 h-4 mr-2" />
+                    打印
+                 </Button>
+
                  <Button variant="outline" size="sm" onClick={handleExportClick}>
                     <Download className="w-4 h-4 mr-2" />
                     导出 PDF
@@ -123,22 +191,14 @@ export const Layout = ({ children }: LayoutProps) => {
         </header>
 
         {/* Canvas Area */}
-        <div className="flex-1 overflow-auto p-8 relative w-full h-full flex flex-col items-center">
+        <div id="invoice-scroll-container" className="flex-1 overflow-auto p-8 relative w-full h-full flex flex-col items-center">
             {children}
         </div>
       </main>
 
       {/* Right Sidebar - Properties */}
-      <aside className="hidden w-[300px] flex-col border-l bg-background md:flex">
-         <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-            <h2 className="font-semibold">Properties</h2>
-         </div>
-         <div className="flex-1 overflow-auto p-4">
-            <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">Select an item to view properties.</p>
-            </div>
-         </div>
-      </aside>
+      {/* Right Sidebar - Properties */}
+      <PropertiesPanel />
 
       <PdfPreviewModal 
         isOpen={isPreviewOpen}

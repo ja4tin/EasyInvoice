@@ -6,7 +6,7 @@ const A4_HEIGHT_PX = 1123; // 297mm
 const PADDING_PX = 40;    // Margin
 
 export function useZoom(containerRef: RefObject<HTMLElement | null>) {
-  const [scale, setScale] = useState(0.9);
+  const [scale, setScale] = useState(0.85);
   const [isAutoFit, setIsAutoFit] = useState(false);
 
   // Calculate AutoFit Scale

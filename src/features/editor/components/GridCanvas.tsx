@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { useGridLayout } from "@/features/editor/hooks/useGridLayout";
 import { FileItem } from "@/features/editor/components/FileItem";
 import { Voucher } from "@/features/voucher/components/Voucher";
+
 import { SortableContext, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useInvoiceStore } from '@/store/useInvoiceStore';
@@ -74,27 +75,31 @@ export const GridCanvas: React.FC<GridCanvasProps> = ({ className }) => {
   const items = useInvoiceStore(state => state.items);
   const { appMode, invoiceLayout } = useSettingsStore(state => state.settings);
 
+  const isVoucherVisible = useInvoiceStore(state => state.isVoucherVisible);
+  
   // Filter items that should be on canvas
   // appMode matches 'payment' | 'invoice', so we can compare directly
   const canvasItems = items.filter(item => item.workspaceId === appMode);
   
   // Grid layout calculation
-  const { totalPages, pages } = useGridLayout({
+  const { pages } = useGridLayout({
     items: canvasItems,
     columns: 4,
     rows: 6,
     appMode,
-    invoiceLayout
+    invoiceLayout,
+    isVoucherVisible
   });
   
-  const showVoucher = appMode === 'payment'; 
+  const showVoucher = appMode === 'payment' && isVoucherVisible; 
 
   return (
-    <div className="flex flex-col items-center gap-8 py-8 min-w-max">
+    <div className="flex flex-col items-center gap-8 py-8 min-w-max relative">
       <SortableContext items={canvasItems.map(i => `canvas-${i.id}`)}>
         {pages.map((pageItems, pageIndex) => (
           <div 
             key={pageIndex}
+            id={`invoice-page-${pageIndex}`}
             className={cn(
                "relative bg-white shadow-lg print:shadow-none print:m-0 transition-all duration-300",
                appMode === 'invoice' && invoiceLayout === 'cross'

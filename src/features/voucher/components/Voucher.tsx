@@ -59,7 +59,7 @@ export function Voucher() {
           {/* No. */}
           <div className="flex items-center gap-2 justify-end">
             <span className="font-semibold text-gray-900 whitespace-nowrap">编号:</span>
-            <div className="border-b border-gray-800 px-2 min-w-[120px] pb-0.5">
+            <div className="border-b border-gray-800 px-2 min-w-[120px] pb-1">
                <input 
                   className="w-full text-center font-mono text-gray-900 bg-transparent border-none focus:ring-0 p-0 cursor-default leading-none"
                   value={voucherData.voucherNo}
@@ -77,7 +77,7 @@ export function Voucher() {
               <input 
                 value={voucherData.payee}
                 onChange={(e) => updateVoucherData({ payee: e.target.value })}
-                className="border-0 border-b border-gray-800 rounded-none px-1 h-6 w-[120px] focus-visible:ring-0 text-gray-900 bg-transparent"
+                className="border-0 border-b border-gray-800 rounded-none px-1 h-6 w-[190px] focus-visible:ring-0 text-gray-900 bg-transparent"
               />
            </div>
            
@@ -86,11 +86,11 @@ export function Voucher() {
               <input 
                 value={voucherData.dept}
                 onChange={(e) => updateVoucherData({ dept: e.target.value })}
-                className="border-0 border-b border-gray-800 rounded-none px-1 h-6 w-[160px] focus-visible:ring-0 text-gray-900 bg-transparent"
+                className="border-0 border-b border-gray-800 rounded-none px-1 h-6 w-[190px] focus-visible:ring-0 text-gray-900 bg-transparent"
               />
            </div>
 
-           <div className="flex items-center gap-2"></div>
+
       </div>
 
       {/* Summary Row */}
@@ -109,8 +109,17 @@ export function Voucher() {
                  </button>
                )}
              </div>
-             <div className="h-9 w-32 text-center flex items-center justify-center">
+             <div className="h-9 w-40 text-center flex items-center justify-center relative">
                 <span className="translate-y-[1px]">金额</span>
+                {voucherData.totalAmountOverride !== undefined && (
+                  <button 
+                    onClick={() => updateVoucherData({ totalAmountOverride: undefined })}
+                    className="absolute right-1 top-1/2 -translate-y-1/2 text-[10px] font-medium text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded border border-blue-200 transition-colors pdf-export-hidden"
+                    title="恢复自动计算"
+                  >
+                    重置
+                  </button>
+                )}
              </div>
           </div>
           {/* Content */}
@@ -123,9 +132,31 @@ export function Voucher() {
                   placeholder="自动生成..."
                 />
              </div>
-             <div className="w-32 flex items-center justify-end font-mono font-bold text-base px-2 bg-slate-50/30">
-                {/* Dynamically calculate total */}
-                ¥ {getTotalAmount().toFixed(2)}
+             <div className="w-40 flex items-center justify-end font-mono font-bold text-base px-2 bg-slate-50/30 relative">
+                <span className="mr-1">¥</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  className="w-full bg-transparent text-right border-none focus:ring-0 p-0 font-mono font-bold text-base"
+                  value={
+                    voucherData.totalAmountOverride !== undefined
+                      ? voucherData.totalAmountOverride
+                      : getTotalAmount().toFixed(2)
+                  }
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    if (!isNaN(val)) {
+                       updateVoucherData({ totalAmountOverride: val });
+                    } else if (e.target.value === '') {
+                       // Optional: allow empty to type? 
+                       // If empty, maybe set to 0 or undefined? 
+                       // Usually better to just let it be empty string in local state, 
+                       // but binding directly to store number field is tricky.
+                       // For now, let's stick to update if valid number, or 0.
+                       updateVoucherData({ totalAmountOverride: 0 });
+                    }
+                  }}
+                />
              </div>
           </div>
           {/* Uppercase Total */}

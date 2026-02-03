@@ -43,6 +43,12 @@ export const useInvoiceStore = create<InvoiceState>()(
         summary: '',
         isSummaryDirty: false,
       },
+      isVoucherVisible: true,
+      toggleVoucherVisibility: (visible) => {
+        set((state) => ({
+          isVoucherVisible: visible !== undefined ? visible : !state.isVoucherVisible
+        }));
+      },
       addItems: (itemsData) => {
         set((state) => {
           // If we want to auto-assign to current view, we need to know the view.
@@ -169,7 +175,27 @@ export const useInvoiceStore = create<InvoiceState>()(
         }));
       },
 
+      clearAllItems: () => {
+        set((state) => ({
+          items: [],
+          voucherData: {
+            ...state.voucherData,
+            summary: '',
+            voucherNo: generateVoucherNo(),
+            isSummaryDirty: false
+          }
+        }));
+      },
+
+
+
       getTotalAmount: () => {
+        // Check for manual override first
+        const { voucherData } = get();
+        if (voucherData.totalAmountOverride !== undefined && voucherData.totalAmountOverride !== null) {
+          return voucherData.totalAmountOverride;
+        }
+
         // GLOBAL AGGREGATION: Sum ALL assigned items (Payment + Invoice)
         // workspaceId can be 'payment' or 'invoice'
         return get().items.reduce((sum, item) => {
@@ -207,22 +233,46 @@ export const useInvoiceStore = create<InvoiceState>()(
     {
       name: 'easyinvoice-storage',
       storage: createJSONStorage(() => idbStorage),
-      version: 1, // Increment version
+      version: 2, // Increment version
       migrate: (persistedState: any, version) => {
+        let state = persistedState;
+        
         if (version === 0) {
-          // Migration from v0 (isOnCanvas) to v1 (workspaceId)
-          // Default old items to 'payment' workspace if isOnCanvas was true or undefined
-          // If isOnCanvas was explicitly false, set to null
-          return {
-            ...persistedState,
-            items: persistedState.items.map((item: any) => ({
+          // Migration from v0 to v1
+          state = {
+            ...state,
+            items: state.items.map((item: any) => ({
               ...item,
               workspaceId: (item.isOnCanvas === false) ? null : 'payment',
-              isOnCanvas: undefined, // Cleanup
+              isOnCanvas: undefined,
             })),
           };
         }
-        return persistedState as InvoiceState;
+
+        if (version < 2) {
+          // Migration to v2: Add voucherData and isVoucherVisible
+          state = {
+            ...state,
+            voucherData: state.voucherData || {
+              title: '付款凭单',
+              companyName: '',
+              voucherNo: '', // Will be regenerated or left empty, logic elsewhere handles it, or use fixed default
+              date: new Date().toISOString().split('T')[0],
+              payee: '',
+              dept: '',
+              financialSupervisor: '',
+              bookkeeper: '',
+              cashier: '',
+              deptManager: '',
+              receiver: '',
+              summary: '',
+              isSummaryDirty: false,
+            },
+            isVoucherVisible: state.isVoucherVisible ?? true,
+          };
+        }
+
+        return state as InvoiceState;
       },
     }
   )

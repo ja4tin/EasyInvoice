@@ -64,7 +64,7 @@ export const calculateLayout = (items: InvoiceItem[], options: LayoutOptions = {
     return pages[pageIndex];
   };
 
-  items.forEach((item, index) => {
+  items.forEach((item) => {
     let w = 2; // Default 2x2 (Payment Mode)
     let h = 2;
 

@@ -7,7 +7,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, X } from 'lucide-react';
+import { Download } from 'lucide-react';
 
 interface PdfPreviewModalProps {
   isOpen: boolean;
@@ -29,7 +29,7 @@ export const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
       <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0 gap-0">
         <DialogHeader className="px-6 py-4 border-b flex-shrink-0">
           <div className="flex items-center justify-between">
-            <DialogTitle>导出预览 (Export Preview)</DialogTitle>
+            <DialogTitle>导出预览</DialogTitle>
              {/* Close button is handled by DialogPrimitive usually, but we can add explicit actions if needed */}
           </div>
         </DialogHeader>
@@ -38,7 +38,7 @@ export const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
             {isGenerating ? (
                 <div className="flex flex-col items-center gap-4">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    <p className="text-muted-foreground">Generating PDF...</p>
+                    <p className="text-muted-foreground">正在生成 PDF...</p>
                 </div>
             ) : pdfUrl ? (
                 <iframe 
@@ -47,17 +47,17 @@ export const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
                     title="PDF Preview"
                 />
             ) : (
-                <p className="text-muted-foreground">No preview available</p>
+                <p className="text-muted-foreground">无法预览</p>
             )}
         </div>
 
         <DialogFooter className="px-6 py-4 border-t bg-background flex-shrink-0 gap-2">
            <Button variant="outline" onClick={onClose}>
-              Cancel
+              取消
            </Button>
            <Button onClick={onDownload} disabled={!pdfUrl || isGenerating}>
               <Download className="w-4 h-4 mr-2" />
-              Download PDF
+              下载 PDF
            </Button>
         </DialogFooter>
       </DialogContent>

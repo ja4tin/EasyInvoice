@@ -175,7 +175,8 @@ function StateTestCard() {
              name: `Item ${items.length + 1}`,
              width: 100,
              height: 50,
-             fileData: 'mock-base64-data'
+             fileData: 'mock-base64-data',
+             workspaceId: 'invoice'
           })}
         >
           <Plus className="w-3 h-3 mr-2" /> Add Mock Item

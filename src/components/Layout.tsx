@@ -1,6 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useExportPdf } from '@/features/editor/hooks/useExportPdf';
+import { PdfPreviewModal } from '@/features/export/components/PdfPreviewModal';
+import { Download } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { UploadZone } from '@/features/upload/components/UploadZone'
 import { UploadedFileList } from '@/features/upload/components/UploadedFileList'
+import { useSettingsStore } from '@/store/useSettingsStore'
+import { cn } from '@/lib/utils'
 
 
 interface LayoutProps {
@@ -8,6 +14,42 @@ interface LayoutProps {
 }
 
 export const Layout = ({ children }: LayoutProps) => {
+  const { appMode, invoiceLayout } = useSettingsStore(state => state.settings);
+  const updateSettings = useSettingsStore(state => state.updateSettings);
+  const { generatePdfUrl } = useExportPdf();
+  
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfFilename, setPdfFilename] = useState<string>('');
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleExportClick = async () => {
+    setIsPreviewOpen(true);
+    setIsGenerating(true);
+    setPdfUrl(null);
+    
+    // Small delay to allow modal to open
+    setTimeout(async () => {
+      const result = await generatePdfUrl();
+      if (result) {
+         setPdfUrl(result.url);
+         setPdfFilename(result.filename);
+      }
+      setIsGenerating(false);
+    }, 100);
+  };
+
+  const handleDownload = () => {
+    if (pdfUrl) {
+      const link = document.createElement('a');
+      link.href = pdfUrl;
+      link.download = pdfFilename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background font-sans antialiased text-foreground">
       {/* Left Sidebar - Data Source */}
@@ -30,15 +72,58 @@ export const Layout = ({ children }: LayoutProps) => {
         <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6">
            {/* Top Toolbar Placeholder */}
            <div className="flex w-full items-center justify-between">
-              <h1 className="font-semibold text-lg">Workspace</h1>
+              <div className="flex items-center gap-4">
+                  <h1 className="font-semibold text-lg">Workspace</h1>
+                  <div className="flex items-center bg-muted rounded-lg p-1 h-8">
+                      <button 
+                        onClick={() => updateSettings({ appMode: 'payment' })}
+                        className={cn(
+                          "px-3 text-sm font-medium rounded-md transition-all h-full flex items-center",
+                          appMode === 'payment' ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        付款凭单
+                      </button>
+                      <button 
+                         onClick={() => updateSettings({ appMode: 'invoice' })}
+                         className={cn(
+                            "px-3 text-sm font-medium rounded-md transition-all h-full flex items-center",
+                            appMode === 'invoice' ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+                         )}
+                      >
+                        报销发票
+                      </button>
+                  </div>
+                  
+                  {/* Invoice Layout Options (Only show in Invoice mode) */}
+                  {appMode === 'invoice' && (
+                     <div className="flex items-center gap-2 border-l pl-4 ml-2">
+                        <span className="text-sm text-muted-foreground">布局:</span>
+                        <select 
+                          className="h-8 text-sm bg-transparent border rounded px-2"
+                          value={invoiceLayout}
+                          onChange={(e) => updateSettings({ invoiceLayout: e.target.value as any })}
+                        >
+                            <option value="cross">田字格 (2x2)</option>
+                            <option value="vertical">上下分栏 (1x2)</option>
+                        </select>
+                     </div>
+                  )}
+              </div>
+              
+
               <div className="flex items-center gap-2">
-                 {/* Toolbar actions */}
+                 {/* Right Toolbar actions */}
+                 <Button variant="outline" size="sm" onClick={handleExportClick}>
+                    <Download className="w-4 h-4 mr-2" />
+                    导出 PDF
+                 </Button>
               </div>
            </div>
         </header>
 
         {/* Canvas Area */}
-        <div className="flex-1 overflow-auto p-8 flex items-center justify-center">
+        <div className="flex-1 overflow-auto p-8 relative w-full h-full flex flex-col items-center">
             {children}
         </div>
       </main>
@@ -54,6 +139,14 @@ export const Layout = ({ children }: LayoutProps) => {
             </div>
          </div>
       </aside>
+
+      <PdfPreviewModal 
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        pdfUrl={pdfUrl}
+        onDownload={handleDownload}
+        isGenerating={isGenerating}
+      />
     </div>
   );
 };

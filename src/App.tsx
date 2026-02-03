@@ -4,28 +4,52 @@ import { GridCanvas } from "@/features/editor/components/GridCanvas";
 import { DragDropProvider } from "@/providers/DragDropProvider";
 import { useZoom } from "@/features/editor/hooks/useZoom";
 import { ZoomControls } from "@/features/editor/components/ZoomControls";
+import { useSettingsStore } from "@/store/useSettingsStore";
 
 function App() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scale, isAutoFit, zoomIn, zoomOut, setManualScale, resetToAuto } = useZoom(containerRef);
+  const { appMode, invoiceLayout } = useSettingsStore(state => state.settings);
+
+  // Determine base dimensions in pixels (approx 3.78 px/mm)
+  // A4: 210mm x 297mm
+  // We use CSS mm units for display, but for layout wrapper we can use exact CSS strings
+  const isLandscape = appMode === 'invoice' && invoiceLayout === 'cross';
+  
+  // We must match the dimensions defined in GridCanvas.tsx
+  const baseWidth = isLandscape ? '297mm' : '210mm';
+  const baseHeight = isLandscape ? '210mm' : '297mm';
 
   return (
     <DragDropProvider>
       <Layout>
         <div 
           ref={containerRef} 
-          className="w-full h-full overflow-y-auto bg-muted/50 scroll-smooth relative"
+          className="w-full h-full overflow-auto bg-muted/50 scroll-smooth relative flex"
         >
-          <div className="min-h-full w-full flex flex-col items-center py-10 origin-top">
-            <div 
-              style={{ 
-                transform: `scale(${scale})`,
-                transformOrigin: 'top center',
-                transition: 'transform 0.1s ease-out'
-              }}
-            >
-            <GridCanvas />
-            </div>
+          {/* Centering Wrapper: Applies margin: auto to center content when smaller than viewport */}
+          <div className="m-auto py-10 origin-top p-[100px]">
+             {/* Scalable Container: reserves the physical space for the scaled content */}
+             <div 
+               style={{ 
+                 width: `calc(${baseWidth} * ${scale})`,
+                 height: `calc(${baseHeight} * ${scale - 0.05})`, // Slight adjustment to prevent unnecessary vertical overflow if perfectly fit
+                 position: 'relative'
+               }}
+             >
+                {/* Visual Transform Layer */}
+                <div 
+                  style={{ 
+                    transform: `scale(${scale})`,
+                    transformOrigin: 'top left',
+                    transition: 'transform 0.1s ease-out',
+                    width: baseWidth,
+                    height: baseHeight // Enforce base height to overlapping content flow
+                  }}
+                >
+                  <GridCanvas />
+                </div>
+             </div>
           </div>
 
           {/* Zoom Controls Overlay */}

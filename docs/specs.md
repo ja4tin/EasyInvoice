@@ -127,15 +127,41 @@
 
   ------
 
-  ### 2.5 导出系统 (Export System)
+  ------
+
+  ### 2.5 导出与打印系统 (Export & Print System)
 
   - **输出格式**：PDF (A4)。
   - **技术策略**：**High-DPI Snapshot (高清容器快照)**。
     - **原理**：锁定 DOM 节点 `#print-container`，通过 `html2canvas` (或类似库) 以 **3x-4x 缩放因子** (约 300 DPI) 进行渲染，生成图片后封装入 PDF。
-    - **内容边界**：**严格仅包含** A4 画布内的视觉元素。自动剔除 UI 辅助线、滚动条、菜单、按钮。
-    - **特性**：
-      - 文字不可复制 (Flattened Image)。
-      - **所见即所得 (WYSIWYG)**：100% 还原网页端的字体、行高、截断效果。
+    - **内容边界**：**严格仅包含** A4 画布内的视觉元素。自动剔除 UI 辅助线、滚动条、菜单、按钮、重置按钮。
+    - **打印功能 (New)**：
+      - **交互**：点击“打印”按钮，先生成高清 PDF Blob，然后在浏览器内部调用打印窗口打印该 Blob (或 Image)，确保打印结果与 PDF 导出结果**100% 一致**。
+
+  ### 2.6 新增交互特性 (New Features)
+
+  #### 2.6.1 一键清空 (Clear All)
+  - **位置**：顶部工具栏左侧 (红色区域)。
+  - **逻辑**：
+    - **清除对象**：清空所有已上传的文件 (Image Items) 和金额汇总。
+    - **保留对象**：**保留**付款凭单的头部信息（报销人、公司名称、日期、部门/项目），保留当前设置（如模式、网格偏好）。
+    - **交互**：点击后弹出二次确认框 ("确定要清空所有单据吗？")。
+
+  #### 2.6.2 页面定位器 (Page Navigator)
+  - **表现**：工作区 (Workspace) 左上角的悬浮胶囊组件。
+  - **显示条件**：仅当总页数 > 1 时显示。
+  - **交互**：点击 "Page 2"，画布区域自动平滑滚动定位到第 2 页顶部。
+
+  #### 2.6.3 右侧面板增强 (Properties Panel +)
+  - **结构**：采用 **折叠面板 (Accordion)** 或 **上下分栏** 结构，确保“付款凭单设置”始终可见。
+  - **部分 A: 凭单设置 (Voucher Settings)**：
+    - **一直显示**：无论是否选中文件，此区域常驻。
+    - **同步字段**：日期、报销人、部门/项目、用途摘要、总金额。此处修改与中间画布的凭单组件实现**双向绑定**。
+    - **显示开关**：[复选框] "显示付款凭单"。
+      - *取消勾选*：中间画布的凭单组件隐藏。
+      - *自动排版*：凭单隐藏后，第一页顶部的空间被释放，文件项应自动**上移填补** (网格流式重排)，但保持 Payment Mode (竖向) 不变。
+  - **部分 B: 选中项属性 (Selected Item)**：
+    - 仅当选中文件时显示 (同原有逻辑)。
 
   ------
 
@@ -267,6 +293,43 @@
   - [ ] 开发右侧属性面板，集成 `react-cropper` 实现图片编辑 Modal。
   - [ ] 开发“付款凭单”组件：实现金额汇总 `useMemo` 计算和大写转换。
 
+  ## 4. Workspace & Data Model
+
+### 4.1. Dual Workspace Architecture (Parallel Existence)
+The application maintains two distinct, persistent workspaces. Switching between modes switches the **active data view**, not just the layout.
+
+*   **Payment Voucher Workspace (付款凭单)**
+    *   **Orientation**: Portrait A4 (Vertical).
+    *   **Components**: Top Voucher Header + Grid Items.
+    *   **Layout**: 2x2 Grid (Cross) or custom defined.
+*   **Reimbursement Invoice Workspace (报销发票)**
+    *   **Orientation**: Landscape A4 (Horizontal).
+    *   **Components**: Grid Items only (No Voucher Header).
+    *   **Layout**: 2x2 Grid (Cross) adapted for Landscape aspect ratio.
+
+### 4.2. File Ownership & Mutuality
+*   **Relationship**: A file can belong to `Payment`, `Invoice`, or `None` (Unassigned).
+*   **Exclusivity**: A file **cannot** be in both workspaces simultaneously.
+*   **State Tracking**: Each file item records its assignment (`workspaceId`: `'payment' | 'invoice' | null`). A marker in the sidebar indicates current ownership.
+
+### 4.5 Global Data Aggregation (CRITICAL)
+
+The "Payment Voucher" component (displayed at the top of the Payment Workspace) acts as the **Global Summary**.
+
+- **Total Amount**: MUST sum the `amount` of **ALL** files stored in the application, regardless of whether their `workspaceId` is `'payment'` or `'invoice'`.
+- **Usage Summary**: MUST concatenate distinct `usage` text from **ALL** files.
+- **Rationale**: Reimbursement aims to claim money for ALL invoices. Even if an invoice is displayed on the "Invoice" sheet (for printing), its cost must be included in the main Payment Voucher. The voucher represents the total claim.
+
+### 4.3. Interaction Design
+*   **Sidebar Multi-Select**:
+    *   Files have checkboxes for selection.
+    *   Action Buttons (Fixed at bottom): "Add to Payment" / "Add to Invoice".
+*   **Contextual Move**:
+    *   Items on the Canvas have a "Move" icon/button.
+    *   Action: Instantly transfers the item to the *other* workspace and removes it from the current view.
+
+### 4.4. Printing & Export
+*   **Dynamic Orientation**: PDF generation (`jspdf`) must respect the active workspace's orientation (Portrait for Payment, Landscape for Invoice).
   ### 第三阶段：导出与优化
 
   - [ ] 封装 `ExportButton` 组件：调用 `html2canvas` 抓取 `#print-area`。
@@ -279,4 +342,3 @@
   - [ ] 性能测试（React Profiler 检测 50+ 组件渲染性能）。
   - [ ] 边界测试（超长文本截断、断电恢复）。
   - [ ] 最终验收。
-

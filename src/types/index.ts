@@ -12,6 +12,8 @@ export interface InvoiceItem extends BaseEntity {
   x?: number; // Grid position X
   y?: number; // Grid position Y
   rotation?: number;
+  workspaceId: 'payment' | 'invoice' | null; // Multi-workspace support
+  // isOnCanvas?: boolean; // DEPRECATED: Replaced by workspaceId
   
   // Data binding properties
   amount?: number; // 废弃，使用 string 以避免精度问题? No, use number but handle with decimal.js in store
@@ -22,11 +24,18 @@ export interface InvoiceItem extends BaseEntity {
   category?: string;
 }
 
+export type AppMode = 'payment' | 'invoice';
+export type InvoiceLayout = 'cross' | 'vertical';
+
 export interface AppSettings {
   theme: 'light' | 'dark' | 'system';
   showGrid: boolean;
   paperSize: 'a4';
   margin: number; // Global margin in mm
+  
+  // New settings for Task-305
+  appMode: AppMode;
+  invoiceLayout: InvoiceLayout;
 }
 
 export interface VoucherData {
@@ -50,16 +59,22 @@ export type InvoiceState = {
   voucherData: VoucherData;
   addItems: (items: Omit<InvoiceItem, keyof BaseEntity>[]) => void;
   addItem: (item: Omit<InvoiceItem, keyof BaseEntity>) => void;
-  removeItem: (id: string) => void;
+  removeItem: (id: string, hardDelete?: boolean) => void;
   updateItem: (id: string, updates: Partial<InvoiceItem>) => void;
   reorderItems: (oldIndex: number, newIndex: number) => void;
   setItems: (items: InvoiceItem[]) => void;
   updateVoucherData: (updates: Partial<VoucherData>) => void;
+  setWorkspace: (id: string, workspaceId: 'payment' | 'invoice' | null) => void;
   
   // New actions & selectors
   resetSummary: () => void;
   getTotalAmount: () => number;
   getAutoSummary: () => string;
+  
+  // Workspace selectors
+  getPaymentItems: () => InvoiceItem[];
+  getInvoiceItems: () => InvoiceItem[];
+  getAllAssignedItems: () => InvoiceItem[];
 }
 
 export type SettingsState = {

@@ -8,6 +8,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   showGrid: true,
   paperSize: 'a4',
   margin: 20, // 20mm
+  appMode: 'payment',
+  invoiceLayout: 'cross',
 }
 
 export const useSettingsStore = create<SettingsState>()(

@@ -117,45 +117,95 @@
             - [x] 304.4: **验证**: 上传多页 PDF，列表应展示多个对应的图片 Item.
 
 - [ ] **Task-305: 发票模式与分流逻辑 (Invoice Mode & Routing)**
-    - **依赖**: Task-301
-    - **上下文**: 实现“核心业务流程”中的分流功能，支持发票模式的专用排版（竖向 1x2 或 横向 2x2）。
-    - **子任务**:
-        - [ ] 305.1: Store 添加 `appMode` 状态 ('payment' | 'invoice') 及切换 Action。
-        - [ ] 305.2: 左侧栏增加模式切换 Tab (或上传时的分流引导)。
-        - [ ] 305.3: 更新 `grid-layout.ts`：新增发票模式布局算法（忽略 Dense Packing，强制固定网格）。
-        - [ ] 305.4: 实现发票模式下的“竖向/横向”排版切换选项。
-        - [ ] 305.5: **验证**: 切换到发票模式，上传 4 张图，应自动铺满 A4（2x2）；切换为竖向，应变为 2 页（每页 2 张）。
+    - **Status**: *Replaced by Phase 3.5 Detailed Tasks*
 
-- [x] **Task-301: 网格计算引擎 (Grid Engine)**
-    - **依赖**: Task-300
-    - **上下文**: 实现核心的布局算法，将文件列表转换为 A4 网格上的坐标。
-    - **子任务**:
-        - [x] 301.1: 创建 `useGridLayout` hook.
-        - [x] 301.2: **核心**: 实现 **Dense Packing (自动填坑)** 算法：遍历 items，为每个 item 寻找网格中**第一个**能容纳它的空闲位置（即 visuals order != DOM order）.
-        - [x] 301.3: 集成“垂直堆叠”强校验逻辑——当检测到目标位置右侧剩余空间不足时，强制限制 item 宽度规格.
-        - [x] 301.4: 实现自动分页逻辑：当当前页排满时，坐标自动计算到下一页.
-        - [x] 301.5: **验证**: 编写单元测试，输入一组混合尺寸的 items，断言其计算出的坐标无重叠且符合堆叠规则.
+---
 
-- [x] **Task-302: 双向拖拽实现 (Drag & Drop)**
-    - **依赖**: Task-300, Task-301
-    - **上下文**: 集成 `dnd-kit`，实现左侧列表和中间网格的拖拽排序。
-    - **子任务**:
-        - [x] 302.1: 在左侧列表集成 `SortableContext`.
-        - [x] 302.2: 在中间画布集成 `SortableContext` (基于计算出的坐标渲染).
-        - [x] 302.3: 实现 `onDragEnd` 处理函数：调用 Store 的 `reorderFiles` 方法.
-        - [x] 302.4: 确保左侧拖拽能实时更新中间网格的排序.
-        - [x] 302.5: **验证**: 拖动左侧第 1 个文件到第 3 位，中间画布对应的图片位置应同步变化.
+## 第3.5阶段：多工作区架构重构 (Phase 3.5: Multi-Workspace Refactoring)
 
-- [x] **Task-303: 数据录入与凭单联动**
-  - **依赖**: Task-202, Task-300
-  - **上下文**: 实现输入框的数据绑定，以及凭单组件的自动汇总逻辑。
+本阶段核心目标：重构数据模型以支持“付款凭单”与“报销发票”双工作区并行，实现文件所有权的互斥管理、横向排版适配及批量操作。
+
+- [x] **Task-600: 数据模型与迁移 (Data Model & Migration)**
+  - **依赖**: Task-300
+  - **上下文**: 将单一的 `isOnCanvas` 状态升级为互斥的 `workspaceId`，确保文件归属明确。
   - **子任务**:
-    - [x] 303.1: 绑定 FileItem 的 Input (`onChange`) 到 Store 的 `updateFile` action。
-    - [x] 303.2: 引入 `decimal.js`，在 Store 中实现 `totalAmount` 的计算 selector。
-    - [x] 303.3: 实现 `digitUppercase` 工具函数（人民币大写转换）。
-    - [x] 303.4: 实现用途摘要的自动拼接逻辑。
-    - [x] 303.5: 实现摘要的 Dirty State 逻辑：手动修改后停止自动更新。
-    - [x] 303.6: **验证**: 修改任意文件的金额，凭单上的总金额和大写金额应实时正确更新。
+    - [x] 600.1: 更新 `InvoiceItem` 接口：废弃 `isOnCanvas`，新增 `workspaceId: 'payment' | 'invoice' | null`。
+    - [x] 600.2: 在 `useInvoiceStore` 中创建数据迁移逻辑 (`migrateData`)：初始化时将旧数据映射为 defaults ('payment')。
+    - [x] 600.3: 更新 Store Actions (`addItems`, `toggleItem`)：改为 `setWorkspace(id, targetMode)`，支持从一个工作区移动到另一个。
+    - [x] 600.4: 创建 Selectors: `getPaymentItems` 和 `getInvoiceItems` 用于分别获取不同视图的数据，以及 `getAllAssignedItems` 用于凭单汇总。
+    - [x] 600.5: **验证**:
+      - 修改本地存储数据模拟旧版本 (仅含 `isOnCanvas`)，刷新页面，确认旧数据自动进入“付款凭单”工作区。
+      - **关键验证**: 将一部分文件移入“发票”工作区，确认顶部“付款凭单”的总金额依然等于所有文件的总和（Payment + Invoice）。
+
+- [x] **Task-601: 侧边栏多选与分流 (Sidebar Enhancements)**
+  - **依赖**: Task-600
+  - **上下文**: 侧边栏需支持批量操作，将文件分配到不同工作区，并直观显示文件归属。
+  - **子任务**:
+    - [x] 601.1: 在 `UploadedFileList` 组件中增加 `selectedFileIds` (Multi-select State)。
+    - [x] 601.2: 重构 `SidebarItem`：增加 Checkbox 复选框；增加状态角标 (Badge) 显示当前归属 (P/I)。
+    - [x] 601.3: 实现 Sidebar 底部固定操作栏 (`SidebarFooter`): 含 "移入凭单", "移入发票" 按钮。
+    - [x] 601.4: 绑定按钮事件：批量调用 `setWorkspace` 更新所选文件的归属。
+    - [x] 601.5: **验证**: 勾选 3 个文件，点击“移入发票”，侧边栏对应角标变为 "I"，且从 Payment 画布消失（如果当前在 Payment）。
+
+- [x] **Task-602: 画布项移动交互 (Canvas Interactions)**
+    - **依赖**: Task-600
+    - **上下文**: 在画布中快速将文件“踢”到另一个工作区。
+    - **子任务**:
+        - [x] 602.1: 更新 `FileItem` 工具栏：新增 "Move" 图标按钮 (根据当前 Mode 显示“移至发票”或“移至凭单”)。
+        - [x] 602.2: 实现点击处理：调用 Store 的切换工作区 Action。
+        - [x] 602.3: **验证**: 在 Payment 模式下点击某图的 Move 按钮，该图立即消失；切换到 Invoice 模式，该图出现在网格中。
+
+- [x] **Task-603: 横向排版与导出适配 (Landscape Layout)**
+    - **依赖**: Task-600, Task-201
+    - **上下文**: 实现 Invoice 模式的横向 A4 布局及 PDF 导出。
+    - **子任务**:
+        - [x] 603.1: 更新 `grid-layout.ts`：新增 `calculateInvoiceLayout` 逻辑，适配 `Landscape A4` (297mm width) 的 2x2 网格计算(AspectRatio 调整)。
+        - [x] 603.2: 更新 `GridCanvas`：根据 `appMode` 动态切换容器尺寸 (Portrait vs Landscape)。
+        - [x] 603.3: 适配 `useExportPdf`：根据当前 `appMode` 设置 jsPDF 的 `orientation` ('p' vs 'l')。
+        - [x] 603.4: **验证**: 切换到 Invoice 模式，确认画布变为横向；导出 PDF，确认 PDF 页面为横向且内容排版正确。
+
+### 2026-02-02
+- **Task-602 Completed**: Implemented canvas interaction features including 'Move' button to switch items between workspaces.
+- **Task-603 Completed**: Adapted "Reimbursement Invoice" workspace for landscape layout and implemented PDF export functionality.
+  - Added `useExportPdf` hook for generating PDFs.
+  - Configured dynamic canvas dimensions based on workspace mode.
+  - Added "Export PDF" button to the main toolbar.
+  - **Task-Fix-Rendering**: Fixed PDF export rendering issues by replacing inputs with styled text elements during capture (Clone & Replace strategy), ensuring clean output for both Voucher and FileItems.
+
+---
+
+## 阶段 3.6：功能增强与交互优化 (Phase 3.6: Enhanced Features)
+
+本阶段实现用户反馈的高频交互功能，包括打印、清空、导航及属性面板增强。
+
+- [ ] **Task-700: 打印与清空功能 (Print & Clear)**
+    - **依赖**: Task-603
+    - **上下文**: 实现顶部工具栏的快捷操作。
+    - **子任务**:
+        - [ ] 700.1: 封装 `usePrint`：复用 `useExportPdf` 生成的 Blob，在隐藏 iframe 中调用 `window.print()`。
+        - [ ] 700.2: 在 Header 实现 "打印" 按钮 (与导出一致的图标风格)。
+        - [ ] 700.3: 实现 Store Action `clearAllItems`：清空文件列表和金额，但**保留**凭单头部信息（公司/人名/日期）。
+        - [ ] 700.4: 在 Header 左侧实现 "一键清空" 按钮，并集成 `AlertDialog` 二次确认。
+        - [ ] 700.5: **验证**: 点击清空，文件消失但报销人还在；点击打印，弹出系统打印对话框且内容清晰。
+
+- [ ] **Task-701: 页面定位器 (Page Navigator)**
+    - **依赖**: Task-301
+    - **上下文**: 方便用户在多页文档中快速跳转。
+    - **子任务**:
+        - [ ] 701.1: 创建 `PageNavigator` 悬浮胶囊组件。
+        - [ ] 701.2: 监听 Store 或 Layout 计算总页数 (Total Pages)。
+        - [ ] 701.3: 实现点击 `Page N` -> 滚动容器 `scrollTo` 到对应高度的逻辑。
+        - [ ] 701.4: **验证**: 上传 20 张图生成 4 页，点击 Page 4，视图平滑滚动到底部。
+
+- [ ] **Task-702: 右侧属性面板重构 (Properties Panel v2)**
+    - **依赖**: Task-400
+    - **上下文**: 增强右侧面板的实用性，支持凭单编辑与显隐控制。
+    - **子任务**:
+        - [ ] 702.1: 重构 `PropertiesPanel` 布局：引入 `Accordion` 或 Split View，分为 "凭单设置" 和 "选中项属性"。
+        - [ ] 702.2: 实现 "凭单设置" 表单：绑定 Store 中的 `voucherData` (日期/摘要/金额/报销人等)。
+        - [ ] 702.3: 实现 "显示付款凭单" Checkbox 开关 & Store 状态 `isVoucherVisible`。
+        - [ ] 702.4: **核心算法**: 更新 `useGridLayout`，当 `isVoucherVisible=false` 时，移除第一页的 Top Offset，使网格从顶端开始排列。
+        - [ ] 702.5: **验证**: 取消勾选凭单，Voucher 消失，第一张图片顶上去；右侧修改金额，中间画布实时变化。
 
 ---
 
@@ -179,20 +229,20 @@
     - **子任务**:
         - [ ] 401.1: 集成 `react-cropper`。
         - [ ] 401.2: 创建 `ImageEditorModal` 组件。
-        - [ ] 401.3: 实现旋转功能（每次旋转 90 度）。
+        - [x] 401.3: 实现旋转功能（每次旋转 90 度）。
         - [ ] 401.4: 实现裁剪保存逻辑：将裁剪后的 Canvas 导出为新的 Base64 替换原图数据。
         - [ ] 401.5: **验证**: 上传一张图，进行裁剪并保存，画布上应显示裁剪后的版本。
 
-- [ ] **Task-402: 导出 PDF**
+- [x] **Task-402: 导出 PDF**
     - **依赖**: Task-201, Task-301
     - **上下文**: 实现核心的导出功能，确保所见即所得。
     - **子任务**:
-        - [ ] 402.1: 创建 `useExportPdf` hook。
-        - [ ] 402.2: 实现 DOM 锁定逻辑：通过 ID 获取 A4 容器元素。
-        - [ ] 402.3: 配置 `html2canvas`：设置 `scale: 3` (300 DPI)，处理 `useCORS` 等选项。
-        - [ ] 402.4: 集成 `jspdf`：将生成的 Canvas 图片按 A4 尺寸添加到 PDF 页面中。
-        - [ ] 402.5: 处理多页导出：如果有多个 A4 页面，需循环处理。
-        - [ ] 402.6: **验证**: 点击导出，下载 PDF，打印或缩放查看，确保文字清晰且无 UI 杂质。
+        - [x] 402.1: 创建 `useExportPdf` hook。
+        - [x] 402.2: 实现 DOM 锁定逻辑：通过 ID 获取 A4 容器元素。
+        - [x] 402.3: 配置 `html2canvas`：设置 `scale: 3` (300 DPI)，处理 `useCORS` 等选项。
+        - [x] 402.4: 集成 `jspdf`：将生成的 Canvas 图片按 A4 尺寸添加到 PDF 页面中。
+        - [x] 402.5: 处理多页导出：如果有多个 A4 页面，需循环处理。
+        - [x] 402.6: **验证**: 点击导出，下载 PDF，打印或缩放查看，确保文字清晰且无 UI 杂质。
 
 - [ ] **Task-403: 数据持久化与恢复测试**
     - **依赖**: Task-102, Task-300

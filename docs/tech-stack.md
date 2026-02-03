@@ -125,14 +125,15 @@ export interface ProjectState {
 
 ## 4. 关键技术点与难点 (Key Technical Challenges)
 
-### 4.1 高清 PDF 导出 (High-DPI Export)
+### 4.1 高清 PDF 导出与打印 (High-DPI Export & Print)
 
-- **挑战**：直接截图通常会导致文字模糊，无法打印。
+- **挑战**：直接截图通常会导致文字模糊，无法打印。直接调用 `window.print()` 打印 DOM 会受到浏览器页眉页脚干扰。
 - **方案**：
   1. 创建一个临时的 DOM 容器。
   2. 利用 `html2canvas` 的 `scale` 参数，设置为 **3** 或 **4** (对应 300 DPI)。
   3. `window.devicePixelRatio` 可能会干扰截图，需在截图时临时覆盖。
   4. 生成的 Canvas 尺寸巨大，需按比例缩放回 A4 PDF 尺寸 (`210mm x 297mm`)。
+  5. **打印策略**：复用上述生成的高清 Blob (或 Image)，在不可见的 `iframe` 中加载并调用打印，保证打印结果与 PDF 导出像素级一致。
 
 ### 4.2 垂直堆叠算法 (Vertical Stacking Logic)
 

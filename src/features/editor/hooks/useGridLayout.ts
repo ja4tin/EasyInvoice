@@ -2,19 +2,35 @@ import { useMemo } from 'react';
 import { useInvoiceStore } from '@/store/useInvoiceStore';
 import { calculateLayout, type LayoutPosition } from '../utils/grid-layout';
 
+import { type InvoiceItem, type AppMode, type InvoiceLayout } from '@/types';
+
 export interface UseGridLayoutResult {
   pages: LayoutPosition[][];
   totalPages: number;
 }
 
-export function useGridLayout(): UseGridLayoutResult {
-  const items = useInvoiceStore((state) => state.items);
-  // In future we might have a setting to toggle voucher, for now hardcoded true or from store if we add it
-  const showVoucher = true; 
+export interface UseGridLayoutProps {
+  items: InvoiceItem[];
+  columns?: number;
+  rows?: number;
+  appMode?: AppMode;
+  invoiceLayout?: InvoiceLayout;
+}
+
+export function useGridLayout({ 
+  items, 
+  appMode = 'payment', 
+  invoiceLayout = 'cross' 
+}: UseGridLayoutProps): UseGridLayoutResult {
+  const showVoucher = true; // Still conditionally used inside calculateLayout based on appMode
 
   const layout = useMemo(() => {
-    return calculateLayout(items, showVoucher);
-  }, [items, showVoucher]);
+    return calculateLayout(items, { 
+      showVoucher, 
+      appMode, 
+      invoiceLayout 
+    });
+  }, [items, showVoucher, appMode, invoiceLayout]);
 
   return layout;
 }

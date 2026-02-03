@@ -45,12 +45,15 @@ export const useInvoiceStore = create<InvoiceState>()(
       },
       addItems: (itemsData) => {
         set((state) => {
-          const newItems = [...state.items, ...itemsData.map(createEntity)];
-          // Recalculate layout is handled by useGridLayout hook, store just keeps list
+          // If we want to auto-assign to current view, we need to know the view.
+          // But store doesn't know view state (kept in Settings).
+          // For now, default to Unassigned (null) as per plan, or maybe 'payment' for backward compat?
+          // Plan said: "default to null workspaceId".
+          const newItems = [...state.items, ...itemsData.map(d => createEntity(d))];
           return { items: newItems };
         });
         
-        // Auto-update summary if needed
+        // Auto-update summary
         const state = get();
         if (!state.voucherData.isSummaryDirty) {
           set((state) => ({
@@ -62,12 +65,21 @@ export const useInvoiceStore = create<InvoiceState>()(
         set((state) => ({
           items: [...state.items, createEntity(itemData)],
         })),
-      removeItem: (id) => {
+      removeItem: (id, hardDelete = false) => {
         set((state) => {
-          const nextItems = state.items.filter((item) => item.id !== id);
-          return { items: nextItems };
+          if (hardDelete) {
+            // Permanently delete
+             return { items: state.items.filter((item) => item.id !== id) };
+          } else {
+            // Just remove from workspace (set to null)
+            return {
+              items: state.items.map(item => 
+                item.id === id ? { ...item, workspaceId: null, updatedAt: Date.now() } : item
+              )
+            };
+          }
         });
-        // Auto-update summary if needed
+        // Auto-update summary
         const state = get();
         if (!state.voucherData.isSummaryDirty) {
            set((state) => ({
@@ -82,7 +94,7 @@ export const useInvoiceStore = create<InvoiceState>()(
           ),
         }));
         
-        // Auto-update summary if needed
+        // Auto-update summary
         const state = get();
         if (!state.voucherData.isSummaryDirty) {
            set((state) => ({
@@ -112,6 +124,43 @@ export const useInvoiceStore = create<InvoiceState>()(
           };
         });
       },
+      setWorkspace: (id, workspaceId) => {
+        set((state) => ({
+          items: state.items.map((item) => {
+            if (item.id !== id) return item;
+            
+            // If moving to 'unassigned', clear data?
+            // "Task-537: 修复工作区移除文件逻辑：移除时保留 Sidebar 条目但清空数据"
+            if (workspaceId === null && item.workspaceId !== null) {
+               return { 
+                ...item, 
+                workspaceId,
+                // Reset data fields
+                amount: undefined,
+                amountStr: '',
+                usage: '',
+                remark: '',
+                category: '',
+                invoiceDate: '',
+                updatedAt: Date.now()
+              };
+            }
+            
+            // If switching from payment to invoice or vice versa, keep data?
+            // "Task-600.3: 支持从一个工作区移动到另一个"
+            // Usually we keep data when moving between valid workspaces.
+            return { ...item, workspaceId, updatedAt: Date.now() };
+          }),
+        }));
+
+        // Auto-update summary
+        const state = get();
+        if (!state.voucherData.isSummaryDirty) {
+           set((state) => ({
+             voucherData: { ...state.voucherData, summary: get().getAutoSummary() }
+           }));
+        }
+      },
       
       resetSummary: () => {
         const auto = get().getAutoSummary();
@@ -121,24 +170,60 @@ export const useInvoiceStore = create<InvoiceState>()(
       },
 
       getTotalAmount: () => {
+        // GLOBAL AGGREGATION: Sum ALL assigned items (Payment + Invoice)
+        // workspaceId can be 'payment' or 'invoice'
         return get().items.reduce((sum, item) => {
-          const val = new Decimal(item.amount || 0);
-          return sum.add(val);
+          if (item.workspaceId === 'payment' || item.workspaceId === 'invoice') {
+             const val = new Decimal(item.amount || 0);
+             return sum.add(val);
+          }
+          return sum;
         }, new Decimal(0)).toNumber();
       },
 
       getAutoSummary: () => {
+        // GLOBAL AGGREGATION: Summarize usage from ALL assigned items
         const usages = get().items
+          .filter(item => item.workspaceId === 'payment' || item.workspaceId === 'invoice')
           .map(item => item.usage?.trim())
           .filter(Boolean);
         const unique = Array.from(new Set(usages));
         if (unique.length === 0) return '';
         return unique.join('、');
+      },
+
+      getPaymentItems: () => {
+        return get().items.filter(item => item.workspaceId === 'payment');
+      },
+
+      getInvoiceItems: () => {
+        return get().items.filter(item => item.workspaceId === 'invoice');
+      },
+
+      getAllAssignedItems: () => {
+        return get().items.filter(item => item.workspaceId !== null);
       }
     }),
     {
       name: 'easyinvoice-storage',
       storage: createJSONStorage(() => idbStorage),
+      version: 1, // Increment version
+      migrate: (persistedState: any, version) => {
+        if (version === 0) {
+          // Migration from v0 (isOnCanvas) to v1 (workspaceId)
+          // Default old items to 'payment' workspace if isOnCanvas was true or undefined
+          // If isOnCanvas was explicitly false, set to null
+          return {
+            ...persistedState,
+            items: persistedState.items.map((item: any) => ({
+              ...item,
+              workspaceId: (item.isOnCanvas === false) ? null : 'payment',
+              isOnCanvas: undefined, // Cleanup
+            })),
+          };
+        }
+        return persistedState as InvoiceState;
+      },
     }
   )
 )

@@ -24,7 +24,23 @@ export interface LayoutResult {
  * @param items List of invoice items
  * @param showVoucher Whether to reserve space for the voucher on Page 1
  */
-export const calculateLayout = (items: InvoiceItem[], showVoucher: boolean = true): LayoutResult => {
+import type { AppMode, InvoiceLayout } from '@/types';
+
+// ... existing constants ...
+
+export interface LayoutOptions {
+  showVoucher?: boolean;
+  appMode?: AppMode;
+  invoiceLayout?: InvoiceLayout;
+}
+
+export const calculateLayout = (items: InvoiceItem[], options: LayoutOptions = {}): LayoutResult => {
+  const { 
+    showVoucher = true, 
+    appMode = 'payment', 
+    invoiceLayout = 'cross' 
+  } = options;
+
   const pages: boolean[][][] = []; // [pageIndex][rowIndex][colIndex] true=occupied
   const results: LayoutPosition[][] = [];
 
@@ -33,8 +49,8 @@ export const calculateLayout = (items: InvoiceItem[], showVoucher: boolean = tru
     while (pages.length <= pageIndex) {
       const newPage = Array(GRID_ROWS).fill(false).map(() => Array(GRID_COLS).fill(false));
       
-      // If Page 0 and voucher is shown, mark top rows as occupied
-      if (pages.length === 0 && showVoucher) {
+      // Payment Mode: Reserve space for voucher on Page 0
+      if (appMode === 'payment' && pages.length === 0 && showVoucher) {
         for (let r = 0; r < VOUCHER_ROWS; r++) {
           for (let c = 0; c < GRID_COLS; c++) {
             newPage[r][c] = true;
@@ -48,15 +64,22 @@ export const calculateLayout = (items: InvoiceItem[], showVoucher: boolean = tru
     return pages[pageIndex];
   };
 
-  items.forEach((item) => {
-    // Determine item grid size. 
-    // Default 2x2.
-    // If we support resizing later, we'd read item.width/height or a specific gridW/gridH prop.
-    // For now assuming all are 2x2 based on specs (Task-203 MVP default says 2x2).
-    // Let's assume item has gridW/gridH or we default to 2.
-    // Spec says: "默认占用 2x2 网格".
-    const w = 2;
-    const h = 2;
+  items.forEach((item, index) => {
+    let w = 2; // Default 2x2 (Payment Mode)
+    let h = 2;
+
+    // Invoice Mode Layout Logic
+    if (appMode === 'invoice') {
+       if (invoiceLayout === 'vertical') {
+         // 1x2 Grid: Full Width, Half Height
+         w = 4;
+         h = 3; 
+       } else {
+         // Cross (2x2) Grid: Half Width, Half Height
+         w = 2;
+         h = 3;
+       }
+    }
 
     let placed = false;
     let pageIndex = 0;
@@ -64,8 +87,10 @@ export const calculateLayout = (items: InvoiceItem[], showVoucher: boolean = tru
     while (!placed) {
       const pageGrid = getPage(pageIndex);
       
+      // Optimization for standard layouts to skip occupied rows faster
+      // Not strictly necessary but good for performance if many items
+      
       // Find first slot
-      // Basic approach: Iterate row by row, col by col
       for (let r = 0; r <= GRID_ROWS - h; r++) {
         for (let c = 0; c <= GRID_COLS - w; c++) {
           
@@ -104,7 +129,6 @@ export const calculateLayout = (items: InvoiceItem[], showVoucher: boolean = tru
       }
 
       if (!placed) {
-        // Try next page
         pageIndex++;
       }
     }
@@ -112,6 +136,6 @@ export const calculateLayout = (items: InvoiceItem[], showVoucher: boolean = tru
 
   return {
     pages: results,
-    totalPages: pages.length || 1, // Ensure at least 1 page exists
+    totalPages: pages.length || 1,
   };
 };

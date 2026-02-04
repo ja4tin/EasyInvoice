@@ -216,3 +216,10 @@
       - **Landscape**: Defaults to 4x3 (Standard) or 4x2 (Page 1 + Voucher).
       - **Portrait**: Defaults to 2x3 (Standard) or 2x4 (Page 1 + Voucher).
   - **Option Logic**: Restricted `2x4` option to be visible ONLY on Page 1 with Voucher.
+
+- **Task-401 (Revisited): Image Editor**
+  - **Core Component**: Implemented `ImageEditorModal` using `react-cropper`.
+  - **Integration**: Added "Crop / Edit" button to `PropertiesPanel`.
+  - **Storage**: Updates item image data directly (`fileData`) and resets rotation to 0 after save.
+  - **Dependencies**: Integrated `cropperjs` (v1.6.2) and `react-cropper`.
+  - **Verification**: Verified via manual build and lint fix.

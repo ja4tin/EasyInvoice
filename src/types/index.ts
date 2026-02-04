@@ -85,6 +85,7 @@ export type InvoiceState = {
   selectedId: string | null;
   selectItem: (id: string | null) => void;
   resizeItem: (id: string, width: number, height: number) => void;
+  updateItemImage: (id: string, newSrc: string) => void;
 }
 
 export type SettingsState = {

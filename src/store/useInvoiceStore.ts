@@ -241,6 +241,13 @@ export const useInvoiceStore = create<InvoiceState>()(
           ),
         }));
       },
+      updateItemImage: (id, newSrc) => {
+         set((state) => ({
+           items: state.items.map((item) => 
+             item.id === id ? { ...item, fileData: newSrc, rotation: 0, updatedAt: Date.now() } : item
+           )
+         }));
+      },
     }),
     {
       name: 'easyinvoice-storage',

@@ -35,6 +35,12 @@ EasyInvoice 是一个纯客户端、离线优先的 React 应用程序，旨在�
   - 解耦存储顺序与视觉顺序。
   - 扫描网格（4 列 x N 行）寻找第一个合适的空位。
   - **AppMode 适配**：根据当前模式 ('Payment' Portrait vs 'Invoice' Landscape) 动态调整网格参数。
+  - **Stability Logic**: 
+    - 布局引擎采用 "Stickiness" 策略防止不必要的自动调整。
+    - 在用户显式调整尺寸导致的页面溢出场景中（如 2x4 撑到下一页），系统不再自动 downgrade 尺寸，而是保留用户设定的尺寸，避免 UI 闪烁。
+  - **Stability Logic**: 
+    - 布局引擎采用 "Stickiness" 策略防止不必要的自动调整。
+    - 在用户显式调整尺寸导致的页面溢出场景中（如 2x4 撑到下一页），系统不再自动 downgrade 尺寸，而是保留用户设定的尺寸，避免 UI 闪烁。
 
 ### 4. 数据层 & I/O
 
@@ -50,7 +56,7 @@ EasyInvoice 是一个纯客户端、离线优先的 React 应用程序，旨在�
 
 ## 目录结构
 基于功能的架构：
-- `src/features/editor`: 核心网格和拖放逻辑。
+- `src/features/editor`: 核心网格和拖放逻辑，包含 `ImageEditorModal`。
 - `src/features/voucher`: 凭单特定逻辑。
 - `src/lib`: 基础设施（DB，工具）。
 - `src/components/Layout.tsx`: 全局三栏布局组件。

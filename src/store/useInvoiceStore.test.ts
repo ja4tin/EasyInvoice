@@ -24,6 +24,7 @@ describe('useInvoiceStore', () => {
                 date: '',
                 payee: '',
                 dept: '',
+                preparer: '',
                 financialSupervisor: '',
                 bookkeeper: '',
                 cashier: '',

@@ -6,8 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, RotateCw, RotateCcw } from 'lucide-react';
+import { ArrowLeft, RotateCw, RotateCcw, Crop } from 'lucide-react';
 import { useGridLayout } from '@/features/editor/hooks/useGridLayout';
+import { useState } from 'react';
+import { ImageEditorModal } from './ImageEditorModal';
 
 export const PropertiesPanel = () => {
   const { 
@@ -26,6 +28,9 @@ export const PropertiesPanel = () => {
   const { appMode, invoiceLayout } = useSettingsStore(state => state.settings);
   const totalAmount = useInvoiceStore(state => state.getTotalAmount());
   
+  // Local state for image editor modal
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+
   // Calculate First Page Status for selected item
   // We need to replicate the layout logic to know which page the item is on
   const canvasItems = items.filter(item => item.workspaceId === appMode);
@@ -117,9 +122,9 @@ export const PropertiesPanel = () => {
               </>
             )}
 
-            {/* Rotation */}
+            {/* Rotation & Crop */}
             <div className="space-y-3">
-              <Label className="text-xs">旋转</Label>
+              <Label className="text-xs">图片编辑</Label>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" className="flex-1" onClick={() => updateItem(selectedItem.id, { rotation: (selectedItem.rotation || 0) - 90 })}>
                   <RotateCcw className="mr-2 h-3.5 w-3.5" /> -90°
@@ -128,6 +133,9 @@ export const PropertiesPanel = () => {
                   <RotateCw className="mr-2 h-3.5 w-3.5" /> +90°
                 </Button>
               </div>
+              <Button variant="secondary" size="sm" className="w-full" onClick={() => setIsEditorOpen(true)}>
+                  <Crop className="mr-2 h-3.5 w-3.5" /> 裁剪 / 编辑
+              </Button>
             </div>
 
             <Separator />
@@ -163,6 +171,15 @@ export const PropertiesPanel = () => {
 
           </div>
         </ScrollArea>
+        
+        {/* Render Modal */}
+        {isEditorOpen && (
+            <ImageEditorModal 
+                isOpen={isEditorOpen} 
+                onClose={() => setIsEditorOpen(false)} 
+                fileId={selectedItem.id} 
+            />
+        )}
 
         <div className="p-4 border-t text-xs text-muted-foreground text-center space-y-0.5">
           <div>© {new Date().getFullYear()} EasyInvoice.</div>

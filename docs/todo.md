@@ -105,12 +105,20 @@
         - [x] 300.1: 定义 `ReimburseItem` TypeScript 接口 (Using `InvoiceItem`).
         - [x] 300.2: 在左侧栏实现文件拖拽上传区域 (Dropzone).
         - [x] 300.3: 实现图片读取逻辑：File -> Base64.
+        - [x] 400.7: **Verification**: Select item, change size, verify layout updates.
+        - [x] Install vitest.
+        - [x] Create unit tests for store and layout logic.
+        - [x] Run tests and fix any issues (Fixed infinite loop crash).
+        - [x] **Task-401: Dimension Refinement**
+    - [x] 401.1: Remove 1x1 and 4x4 options from PropertiesPanel.
+    - [x] 401.2: Add 2x3 option to PropertiesPanel.
+    - [x] 401.3: Update default file dimensions to 2x3 in layout engine/store.
+    - [x] 401.4: Update unit tests to reflect new defaults. (Fixed infinite loop crash).
         - [x] 300.4: **关键**: 实现图片压缩逻辑（Canvas 绘制，限制 max-width 1500px）.
         - [x] 300.5: 更新 Store，实现 `addFiles` action (Using `addItems`).
         - [x] 300.6: **验证**: 上传 5 张大图，检查 Store 中是否生成了压缩后的数据对象，且左侧列表能显示缩略图.
     - [x] **Task-304: PDF 格式支持 (New Request)**
         - **上下文**: 用户需要上传 PDF 文件（例如电子发票）。需将 PDF 每一页转换为图片处理。
-        - **子任务**:
             - [x] 304.1: 安装 `pdfjs-dist`.
             - [x] 304.2: 实现 `processPdf` 工具函数（PDF Page -> Canvas -> Base64）.
             - [x] 304.3: 更新 `UploadZone` 支持 `.pdf` 并调用新的处理逻辑.
@@ -266,6 +274,24 @@
 ---
 
 ## 第五阶段：清理与发布 (Phase 5: Polish & Ship)
+
+- [x] **Task-404: Properties Panel & Payment Voucher Logic**
+    - **Dependency**: Task-400
+    - **Context**: User requests specific dimension constraints for the first page when the voucher is visible.
+    - **Sub-tasks**:
+        - [x] 404.1: Identify "First Page" status of selected item in `PropertiesPanel`.
+        - [x] 404.2: Conditionally filter dimension options (hide x3 heights) on Page 1.
+        - [x] 404.3: Verify workspace background click returns to Voucher Settings.
+
+- [x] **Task-405: Smart Default Dimensions & First Page Logic**
+    - **Dependency**: Task-404
+    - **Context**: User requests default dimensions based on aspect ratio and stricter constraints for Page 1 with Voucher.
+    - **Sub-tasks**:
+        - [x] 405.1: Implement Aspect Ratio Detection on Upload (Landscape -> 4x3, Portrait -> 2x3).
+        - [x] 405.2: Implement "First Page" Overlay Logic (Override defaults if on Page 1 & Voucher Visible).
+            - Landscape on Page 1 -> 4x2.
+            - Portrait on Page 1 -> 2x4.
+        - [x] 405.3: Update `PropertiesPanel` to restrict `2x4` option ONLY to Page 1 with Voucher. Settings.
 
 - [ ] **Task-500: UI 细节打磨**
     - **依赖**: 所有前置任务

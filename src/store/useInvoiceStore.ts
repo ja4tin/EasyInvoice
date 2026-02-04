@@ -35,6 +35,7 @@ export const useInvoiceStore = create<InvoiceState>()(
         date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
         payee: '',
         dept: '',
+        preparer: '',
         financialSupervisor: '',
         bookkeeper: '',
         cashier: '',
@@ -215,7 +216,8 @@ export const useInvoiceStore = create<InvoiceState>()(
           .filter(Boolean);
         const unique = Array.from(new Set(usages));
         if (unique.length === 0) return '';
-        return unique.join('、');
+        const combined = unique.join('、');
+        return combined.length > 72 ? combined.slice(0, 72) : combined;
       },
 
       getPaymentItems: () => {
@@ -228,12 +230,22 @@ export const useInvoiceStore = create<InvoiceState>()(
 
       getAllAssignedItems: () => {
         return get().items.filter(item => item.workspaceId !== null);
-      }
+      },
+
+      selectedId: null,
+      selectItem: (id) => set({ selectedId: id }),
+      resizeItem: (id, width, height) => {
+        set((state) => ({
+          items: state.items.map((item) =>
+            item.id === id ? { ...item, width, height, updatedAt: Date.now() } : item
+          ),
+        }));
+      },
     }),
     {
       name: 'easyinvoice-storage',
       storage: createJSONStorage(() => idbStorage),
-      version: 2, // Increment version
+      version: 3, // Increment version
       migrate: (persistedState: any, version) => {
         let state = persistedState;
         
@@ -256,10 +268,11 @@ export const useInvoiceStore = create<InvoiceState>()(
             voucherData: state.voucherData || {
               title: '付款凭单',
               companyName: '',
-              voucherNo: '', // Will be regenerated or left empty, logic elsewhere handles it, or use fixed default
+              voucherNo: '', 
               date: new Date().toISOString().split('T')[0],
               payee: '',
               dept: '',
+              preparer: '', // Initialize preparer
               financialSupervisor: '',
               bookkeeper: '',
               cashier: '',
@@ -270,6 +283,17 @@ export const useInvoiceStore = create<InvoiceState>()(
             },
             isVoucherVisible: state.isVoucherVisible ?? true,
           };
+        }
+        
+        if(version < 3) {
+           // Migration to v3: Ensure preparer exists if not already (for existing v2 users)
+           state = {
+             ...state,
+             voucherData: {
+               ...state.voucherData,
+               preparer: state.voucherData.preparer || '',
+             }
+           }
         }
 
         return state as InvoiceState;

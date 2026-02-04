@@ -15,13 +15,13 @@ import { useInvoiceStore } from '@/store/useInvoiceStore'
 import { useSettingsStore } from '@/store/useSettingsStore'
 import { processImage, processPdf } from '@/lib/image-processing'
 
-export function UploadZone() {
+export const UploadZone = () => {
   const [isProcessing, setIsProcessing] = useState(false)
   const [showDuplicateAlert, setShowDuplicateAlert] = useState(false)
   const [duplicateCount, setDuplicateCount] = useState(0)
   
   const addItems = useInvoiceStore((state) => state.addItems)
-  const appMode = useSettingsStore((state) => state.settings.appMode)
+  const { settings } = useSettingsStore();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return
@@ -64,17 +64,46 @@ export function UploadZone() {
       const results = await Promise.all(tasks);
       const processed = results.flat();
       
-      addItems(processed.map(img => ({
-        name: img.name,
-        fileData: img.base64,
-        width: img.width,
-        height: img.height,
-        // Default values
-        amount: 0,
-        category: '',
-        invoiceDate: new Date().toISOString().split('T')[0],
-        workspaceId: appMode
-      })))
+      const state = useInvoiceStore.getState();
+      const currentItems = state.items;
+      const isVoucherVisible = state.isVoucherVisible;
+
+      addItems(processed.map((img, index) => {
+        const isLandscape = img.width > img.height;
+        // Default Logic:
+        // Landscape -> 4x3
+        // Portrait -> 2x3
+        let defaultW = isLandscape ? 4 : 2;
+        let defaultH = 3;
+
+        // Smart Logic for First Page with Voucher:
+        // If Voucher is Visible AND it's the very first item (or first in this batch if workspace is empty)
+        // We only apply this to the first item of the upload batch if the workspace was empty
+        const isFirstItemInWorkspace = currentItems.length === 0 && index === 0;
+
+        if (isVoucherVisible && isFirstItemInWorkspace) {
+             if (isLandscape) {
+                 // Landscape on Page 1 -> 4x2
+                 defaultH = 2;
+             } else {
+                 // Portrait on Page 1 -> 2x4
+                 defaultH = 4;
+                 // Ensure width is 2 (already set)
+             }
+        }
+
+        return {
+          name: img.name,
+          fileData: img.base64,
+          width: defaultW,
+          height: defaultH,
+          // Default values
+          amount: 0,
+          category: '',
+          invoiceDate: new Date().toISOString().split('T')[0],
+          workspaceId: settings.appMode, // Assign to current workspace
+        };
+      }))
       
     } catch (error) {
       console.error('Failed to process images', error)

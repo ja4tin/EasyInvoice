@@ -176,3 +176,43 @@
 - **2026-02-02**: 完成了 Task-600，实现了多工作区的数据模型基础与全局汇总逻辑。正在进行侧边栏 UI 重构。
 - **2026-02-02**: 完成了 Invoice Mode 的核心开发与验证，支持了纯报销单模式下的多种布局策略。
 - **2026-01-30**：确认了网格布局的自动填坑 (Dense Packing) 策略。初始化了文档。
+
+### 2026-02-04
+- [x] **Task-400: Properties Panel Interaction** - Implemented item selection, resizing, and contextual properties panel. verified with unit tests.ectItem` action in `useInvoiceStore`.
+  - Updated `FileItem` to support visual selection state.
+  - Enabled contextual rendering in `PropertiesPanel` (Voucher vs File settings).
+  - Implemented item resizing (`resizeItem` action) and layout updates (`calculateLayout`).
+  - Added unit tests for layout engine and store logic using Vitest.
+  - **Fixed Critical Bug**: Fixed application freeze/crash on file upload caused by infinite loop in layout engine when item dimensions were unchecked. Added strict dimension clamping and safety break.
+
+### 2026-02-04 (Part 2)
+- **Task-401: Dimension Refinement**
+  - Updated default file dimensions from 2x2 to 2x3 (Vertical Standard).
+  - Updated PropertiesPanel UI: Removed 1x1/4x4, added 2x3 option.
+  - Verified with updated unit tests.
+
+- **Task-402: Properties Panel UI Polish**
+  - Fixed right-side content truncation by increasing panel width to 320px and adding `shrink-0`.
+  - Added visual active state (highlight) for the selected dimension button.
+
+- **Task-403: Invoice Mode Logic & UI Fixes**
+  - **Layout**: Enforced fixed dimensions for "Reimbursement Invoice" (invoice) mode.
+      - Grid Layout: 2x2.
+      - Vertical Layout: 4x3 (Top/Bottom split).
+  - **Properties Panel**: 
+      - Increased width to **350px** to prevent truncation.
+      - Automatically **hidden size controls** when in "Reimbursement Invoice" mode (fixed size).
+
+- **Task-404: Properties Panel & Payment Voucher Logic**
+  - **First Page Detection**: Implemented logic in `PropertiesPanel` to detect if the selected item is on Page 1.
+  - **Dimension Restrictions**: 
+      - If `appMode === 'payment'` AND `isVoucherVisible` AND `isFirstPage`:
+      - **Hidden**: 2x3 and 4x3 options (to avoid wasting space below voucher).
+      - **Allowed**: 2x2, 2x4, 4x2 options.
+  - **Interaction**: Confirmed background click deselects items.
+
+- **Task-405: Smart Default Dimensions**
+  - **Upload Logic**: 
+      - **Landscape**: Defaults to 4x3 (Standard) or 4x2 (Page 1 + Voucher).
+      - **Portrait**: Defaults to 2x3 (Standard) or 2x4 (Page 1 + Voucher).
+  - **Option Logic**: Restricted `2x4` option to be visible ONLY on Page 1 with Voucher.

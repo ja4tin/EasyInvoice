@@ -31,17 +31,20 @@ export function FileItem({
     <div 
       className={cn(
         "group relative flex flex-col bg-white rounded-lg shadow-sm border transition-all duration-200 hover:shadow-md select-none",
-        isSelected ? "ring-2 ring-primary border-primary" : "border-slate-200 hover:border-slate-300",
+        isSelected ? "ring-2 ring-primary border-primary z-10" : "border-slate-200 hover:border-slate-300",
         className
       )}
-      onClick={onSelect}
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelect?.();
+      }}
     >
       {/* Visual Header / Drag Handle (Hover Only) */}
       <div 
         className="absolute top-0 inset-x-0 z-20 h-7 bg-white/95 backdrop-blur-sm border-b border-slate-100 flex items-center justify-between px-2 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity duration-200"
         {...dragHandleProps}
       >
-         <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider truncate max-w-[120px]" title={data.name}>{data.name || 'RECEIPT'}</span>
+         <span className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider truncate max-w-[120px]" title={data.name}>{data.name || 'RECEIPT'}</span>
          {/* Hover Actions */}
          <div className="flex gap-1">
             {onMove && (
@@ -85,7 +88,22 @@ export function FileItem({
           <img 
             src={fileData} 
             alt="invoice" 
-            style={{ transform: `rotate(${data.rotation || 0}deg)` }}
+            style={{ 
+              transform: (() => {
+                const r = data.rotation || 0;
+                // Check if rotated 90 or 270 degrees
+                if (Math.abs(r % 180) === 90) {
+                  // Calculate scale to fit. 
+                  // If w=2, h=4: we need to fit '4' into '2' (scale 0.5) and '2' into '4' (fine).
+                  // Scale = min(w/h, h/w)
+                  const w = data.width || 2;
+                  const h = data.height || 2;
+                  const scale = Math.min(w/h, h/w);
+                  return `rotate(${r}deg) scale(${scale})`;
+                }
+                return `rotate(${r}deg)`;
+              })()
+            }}
             className="w-full h-full object-contain pointer-events-none select-none transition-transform duration-200" 
           />
         ) : (

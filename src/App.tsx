@@ -23,37 +23,40 @@ function App() {
   return (
     <DragDropProvider>
       <Layout>
-        <div 
-          ref={containerRef} 
-          className="w-full h-full overflow-auto bg-muted/50 scroll-smooth relative flex"
-        >
-          {/* Centering Wrapper: Applies margin: auto to center content when smaller than viewport */}
-          <div className="m-auto py-10 origin-top p-[100px]">
-             {/* Scalable Container: reserves the physical space for the scaled content */}
-             <div 
-               style={{ 
-                 width: `calc(${baseWidth} * ${scale})`,
-                 height: `calc(${baseHeight} * ${scale - 0.05})`, // Slight adjustment to prevent unnecessary vertical overflow if perfectly fit
-                 position: 'relative'
-               }}
-             >
-                {/* Visual Transform Layer */}
-                <div 
-                  style={{ 
-                    transform: `scale(${scale})`,
-                    transformOrigin: 'top left',
-                    transition: 'transform 0.1s ease-out',
-                    width: baseWidth,
-                    height: baseHeight // Enforce base height to overlapping content flow
-                  }}
-                >
-                  <GridCanvas />
-                </div>
-             </div>
+        <div className="relative w-full h-full overflow-hidden">
+          <div 
+            id="invoice-scroll-container"
+            ref={containerRef} 
+            className="w-full h-full overflow-auto bg-muted/50 scroll-smooth relative flex"
+          >
+            {/* Centering Wrapper: Applies margin: auto to center content when smaller than viewport */}
+            <div className="m-auto py-10 origin-top p-[100px]">
+               {/* Scalable Container: reserves the physical space for the scaled content */}
+               <div 
+                 style={{ 
+                   width: `calc(${baseWidth} * ${scale})`,
+                   height: `calc(${baseHeight} * ${scale - 0.05})`, // Slight adjustment to prevent unnecessary vertical overflow if perfectly fit
+                   position: 'relative'
+                 }}
+               >
+                  {/* Visual Transform Layer */}
+                  <div 
+                    style={{ 
+                      transform: `scale(${scale})`,
+                      transformOrigin: 'top left',
+                      transition: 'transform 0.1s ease-out',
+                      width: baseWidth,
+                      height: baseHeight // Enforce base height to overlapping content flow
+                    }}
+                  >
+                    <GridCanvas />
+                  </div>
+               </div>
+            </div>
           </div>
 
-          {/* Zoom Controls Overlay */}
-          <div className="fixed bottom-6 right-80 z-50">
+          {/* Zoom Controls Overlay - Absolute to Wrapper */}
+          <div className="absolute bottom-6 right-6 z-50">
              <ZoomControls 
                scale={scale}
                isAutoFit={isAutoFit}

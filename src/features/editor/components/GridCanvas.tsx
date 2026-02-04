@@ -1,30 +1,25 @@
-import React from 'react';
-import { cn } from "@/lib/utils";
 import { useGridLayout } from "@/features/editor/hooks/useGridLayout";
 import { FileItem } from "@/features/editor/components/FileItem";
-import { Voucher } from "@/features/voucher/components/Voucher";
+import { type InvoiceItem } from '@/types';
 
 import { SortableContext, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useInvoiceStore } from '@/store/useInvoiceStore';
-import type { InvoiceItem } from "@/types";
-
-interface GridCanvasProps {
-  className?: string;
-  children?: React.ReactNode; 
-}
-
 // Internal wrapper to handle drag listeners specifically for FileItem
 function SortableGridItem({ 
   id, 
   item, 
   className,
-  appMode
+  appMode,
+  isSelected,
+  onSelect
 }: { 
   id: string, 
   item: InvoiceItem, 
   className?: string, 
-  appMode: 'payment' | 'invoice' 
+  appMode: 'payment' | 'invoice',
+  isSelected?: boolean,
+  onSelect?: () => void
 }) {
   const {
     attributes,
@@ -42,7 +37,7 @@ function SortableGridItem({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 50 : 'auto',
+    zIndex: isDragging ? 50 : 'auto', // Higher z-index while dragging
   };
   
   const handleMove = () => {
@@ -62,98 +57,77 @@ function SortableGridItem({
          onDelete={() => setWorkspace(item.id, null)}
          onMove={handleMove}
          moveActionLabel={moveLabel}
+         isSelected={isSelected}
+         onSelect={onSelect}
       />
     </div>
   );
 }
 
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { useAutoResize } from '@/features/editor/hooks/useAutoResize';
 
-// ... (previous imports)
+import { GridPageRenderer } from "./GridPageRenderer";
 
-export const GridCanvas: React.FC<GridCanvasProps> = ({ className }) => {
-  const items = useInvoiceStore(state => state.items);
-  const { appMode, invoiceLayout } = useSettingsStore(state => state.settings);
-
-  const isVoucherVisible = useInvoiceStore(state => state.isVoucherVisible);
+export const GridCanvas = () => {
+  const { items, selectItem, selectedId, isVoucherVisible } = useInvoiceStore();
+  const { settings } = useSettingsStore();
   
   // Filter items that should be on canvas
-  // appMode matches 'payment' | 'invoice', so we can compare directly
-  const canvasItems = items.filter(item => item.workspaceId === appMode);
+  const canvasItems = items.filter(item => item.workspaceId === settings.appMode);
   
   // Grid layout calculation
   const { pages } = useGridLayout({
     items: canvasItems,
     columns: 4,
     rows: 6,
-    appMode,
-    invoiceLayout,
+    appMode: settings.appMode,
+    invoiceLayout: settings.invoiceLayout,
     isVoucherVisible
   });
+
+  // Enable smart auto-resize on page transitions
+  useAutoResize({
+    items: items, 
+    appMode: settings.appMode,
+    invoiceLayout: settings.invoiceLayout,
+    isVoucherVisible,
+  });
   
-  const showVoucher = appMode === 'payment' && isVoucherVisible; 
+  const showVoucher = settings.appMode === 'payment' && isVoucherVisible;
 
   return (
-    <div className="flex flex-col items-center gap-8 py-8 min-w-max relative">
+    <div 
+      className="flex flex-col items-center gap-8 py-8 min-h-full w-full relative cursor-default"
+    >
       <SortableContext items={canvasItems.map(i => `canvas-${i.id}`)}>
         {pages.map((pageItems, pageIndex) => (
           <div 
-            key={pageIndex}
-            id={`invoice-page-${pageIndex}`}
-            className={cn(
-               "relative bg-white shadow-lg print:shadow-none print:m-0 transition-all duration-300",
-               appMode === 'invoice' && invoiceLayout === 'cross'
-                 ? "w-[297mm] h-[210mm] min-w-[297mm] min-h-[210mm]"
-                 : "w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm]",
-               className
-             )}
+             key={pageIndex}
+             id={`invoice-page-${pageIndex}`}
+             // Add onclick handler wrapper because GridPageRenderer doesn't accept onClick
+             onClick={(e) => {
+               e.stopPropagation();
+               selectItem(null); 
+             }}
           >
-             {/* Grid Overlay */}
-             <div className="absolute inset-0 grid grid-cols-4 grid-rows-6 pointer-events-none z-10 pdf-export-hidden">
-                {Array.from({ length: 24 }).map((_, i) => (
-                  <div key={i} className="border border-slate-200/50" />
-                ))}
-             </div>
-
-             {/* Content Layer */}
-             <div className="relative z-20 w-full h-full p-0">
-               {/* Voucher - Only on Page 0 */}
-               {pageIndex === 0 && showVoucher && (
-                 <div className="absolute top-0 left-0 w-full h-[33.33%] pointer-events-auto p-[5mm]">
-                   <Voucher />
-                 </div>
-               )}
-
-               {/* Items */}
-               {pageItems.map((pos) => {
-                 const style = {
-                   left: `${(pos.x / 4) * 100}%`,
-                   top: `${(pos.y / 6) * 100}%`,
-                   width: `${(pos.w / 4) * 100}%`,
-                   height: `${(pos.h / 6) * 100}%`,
-                 };
-
-                 return (
-                   <div 
-                     key={pos.item.id} 
-                     className="absolute p-2"
-                     style={style}
-                   >
-                     <SortableGridItem 
-                        id={`canvas-${pos.item.id}`} 
-                        item={pos.item}
+              <GridPageRenderer 
+                  pageIndex={pageIndex}
+                  items={pageItems}
+                  appMode={settings.appMode}
+                  invoiceLayout={settings.invoiceLayout}
+                  showVoucher={showVoucher}
+                  renderItem={(item) => (
+                      <SortableGridItem 
+                        id={`canvas-${item.id}`} 
+                        item={item}
                         className="w-full h-full"
-                        appMode={appMode}
+                        appMode={settings.appMode}
+                        isSelected={selectedId === item.id}
+                        onSelect={() => selectItem(item.id)}
                      />
-                   </div>
-                 );
-               })}
-             </div>
-
-             {/* Page Number */}
-             <div className="absolute bottom-2 right-4 text-xs text-muted-foreground print:hidden pdf-export-hidden">
-               Page {pageIndex + 1}
-             </div>
+                  )}
+              />
           </div>
         ))}
       </SortableContext>

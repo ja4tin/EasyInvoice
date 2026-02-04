@@ -5,10 +5,12 @@ import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { UploadZone } from '@/features/upload/components/UploadZone'
 import { UploadedFileList } from '@/features/upload/components/UploadedFileList'
+import { PropertiesPanel } from '@/features/editor/components/PropertiesPanel'
+import { PrintContainer } from '@/features/editor/components/PrintContainer'
 import { useSettingsStore } from '@/store/useSettingsStore'
 import { useInvoiceStore } from '@/store/useInvoiceStore'
 import { usePrint } from '@/features/editor/hooks/usePrint'
-import { Trash2, Printer } from 'lucide-react'
+import { Trash2, Printer, PanelLeftClose, PanelLeftOpen, Github } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   AlertDialog,
@@ -24,7 +26,6 @@ import {
 
 import { PageNavigator } from '@/features/editor/components/PageNavigator'
 import { useGridLayout } from '@/features/editor/hooks/useGridLayout'
-import { PropertiesPanel } from '@/features/editor/components/PropertiesPanel'
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -51,6 +52,9 @@ export const Layout = ({ children }: LayoutProps) => {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfFilename, setPdfFilename] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
+  
+  // Left Sidebar State
+  const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
 
   const handleExportClick = async () => {
     setIsPreviewOpen(true);
@@ -80,29 +84,34 @@ export const Layout = ({ children }: LayoutProps) => {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background font-sans antialiased text-foreground">
-      {/* Left Sidebar - Data Source */}
-      <aside className="hidden w-[280px] flex-col border-r bg-muted/30 md:flex">
-        <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-          <a href="/" className="flex items-center gap-2 font-semibold">
-            <span className="">EasyInvoice</span>
-          </a>
-        </div>
-        <div className="flex-1 overflow-auto py-2">
-            <div className="px-4 py-2 space-y-4">
-                <UploadZone />
-                <UploadedFileList />
-            </div>
-        </div>
-      </aside>
+    <div className="flex h-screen w-full overflow-hidden flex-col bg-background font-sans antialiased text-foreground">
+      {/* 1. Global Header - Full Width */}
+      {/* 1. Global Header - Full Width */}
+      <header className="flex h-14 items-center border-b bg-background lg:h-[60px] shrink-0 z-10 w-full justify-between">
+          {/* Logo Section - Persistent Fixed Width (280px) */}
+          <div className="flex items-center gap-2 font-semibold w-[280px] border-r border-border shrink-0 h-full px-6 justify-center">
+             {/* Show Open Button if Sidebar is Closed */}
+             {!isLeftSidebarOpen && (
+                 <Button 
+                   variant="ghost" 
+                   size="icon" 
+                   className="-ml-2 h-8 w-8 text-muted-foreground hover:text-foreground mr-2"
+                   onClick={() => setIsLeftSidebarOpen(true)}
+                   title="展开侧边栏"
+                 >
+                    <PanelLeftOpen className="h-4 w-4" />
+                 </Button>
+             )}
+             <a href="/" className="flex items-center gap-2">
+                <img src="/logo.png" alt="Logo" className="w-8 h-8 rounded-full" />
+                <span>EasyInvoice</span>
+             </a>
+          </div>
 
-      {/* Main Workspace - Canvas */}
-      <main className="flex flex-1 flex-col relative overflow-hidden bg-muted/50">
-        <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6">
-           {/* Top Toolbar Placeholder */}
-           <div className="flex w-full items-center justify-between">
+          {/* Middle Section (Toolbar) - Flex 1 */}
+          <div className="flex flex-1 items-center px-4 overflow-hidden justify-between">
+              {/* Contextual Toolbar (PageNav, Layout Select) */}
               <div className="flex items-center gap-4">
-                  <h1 className="font-semibold text-lg">工作区</h1>
                   <div className="flex items-center bg-muted rounded-lg p-1 h-8">
                       <button 
                         onClick={() => updateSettings({ appMode: 'payment' })}
@@ -141,13 +150,10 @@ export const Layout = ({ children }: LayoutProps) => {
                         </select>
                      </div>
                   )}
-               </div>
-              
+              </div>
 
-              
-
+              {/* Action Buttons (Moved to Middle Section Right Side) */}
               <div className="flex items-center gap-2">
-                 {/* Right Toolbar actions */}
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button 
@@ -187,18 +193,79 @@ export const Layout = ({ children }: LayoutProps) => {
                     导出 PDF
                  </Button>
               </div>
-           </div>
-        </header>
+          </div>
 
-        {/* Canvas Area */}
-        <div id="invoice-scroll-container" className="flex-1 overflow-auto p-8 relative w-full h-full flex flex-col items-center">
-            {children}
-        </div>
-      </main>
+          {/* Right Section (GitHub Link) - Fixed Width (280px) Aligned with Right Sidebar */}
+          <div className="flex items-center gap-2 w-[280px] border-l border-border shrink-0 h-full px-6 justify-end">
+             <Button variant="ghost" size="icon" asChild>
+                <a href="https://github.com/ja4tin/EasyInvoice" target="_blank" rel="noopener noreferrer" title="View on GitHub">
+                    <Github className="w-5 h-5" />
+                </a>
+             </Button>
+          </div>
+      </header>
 
-      {/* Right Sidebar - Properties */}
-      {/* Right Sidebar - Properties */}
-      <PropertiesPanel />
+      {/* 2. Body Container */}
+      <div className="flex flex-1 overflow-hidden">
+        
+        {/* Left Sidebar */}
+        <aside 
+            className={cn(
+            "flex-col border-r bg-muted/30 transition-all duration-300 ease-in-out md:flex overflow-hidden",
+            isLeftSidebarOpen ? "w-[280px]" : "w-[50px]"
+            )}
+        >
+            {/* Inner Header with Collapse Button */}
+            <div className={cn(
+                "flex items-center border-b py-3 transition-all duration-300",
+                isLeftSidebarOpen ? "justify-between px-4 min-w-[280px]" : "justify-center px-0 w-full"
+            )}>
+                <span className={cn("text-sm font-medium transition-opacity duration-200", !isLeftSidebarOpen && "opacity-0 hidden")}>数据源</span>
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    onClick={() => setIsLeftSidebarOpen(!isLeftSidebarOpen)}
+                    title={isLeftSidebarOpen ? "收起侧边栏" : "展开侧边栏"}
+                >
+                    {isLeftSidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
+                </Button>
+            </div>
+
+            <div className={cn("flex-1 overflow-auto py-2 min-w-[280px] transition-opacity duration-200", !isLeftSidebarOpen && "opacity-0 invisible")}>
+                <div className="px-4 py-2 space-y-4">
+                    <UploadZone />
+                    <UploadedFileList />
+                </div>
+            </div>
+        </aside>
+
+        {/* Main Workspace */}
+        <main className="flex flex-1 flex-col relative overflow-hidden bg-muted/50 min-w-0">
+             <div 
+               className="flex-1 overflow-hidden relative w-full h-full flex flex-col items-center"
+               onClick={(e) => {
+                 // Check if the click target is a button, input, or inside a sortable item
+                 // We only want to deselect if clicking the "background"
+                 const target = e.target as HTMLElement;
+                 const isInteractive = target.closest('button') || target.closest('input') || target.closest('select') || target.closest('a') || target.closest('[data-no-deselect="true"]');
+                 
+                 if (!isInteractive) {
+                   useInvoiceStore.getState().selectItem(null);
+                 }
+               }}
+             >
+                {children}
+             </div>
+        </main>
+        
+        {/* Right Sidebar */}
+        <PropertiesPanel />
+        
+      </div>
+
+      {/* Hidden Print Container for Export */}
+      <PrintContainer />
 
       <PdfPreviewModal 
         isOpen={isPreviewOpen}

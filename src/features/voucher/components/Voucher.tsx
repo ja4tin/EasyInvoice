@@ -77,16 +77,25 @@ export function Voucher() {
               <input 
                 value={voucherData.payee}
                 onChange={(e) => updateVoucherData({ payee: e.target.value })}
-                className="border-0 border-b border-gray-800 rounded-none px-1 h-6 w-[190px] focus-visible:ring-0 text-gray-900 bg-transparent"
+                className="border-0 border-b border-gray-800 rounded-none px-1 h-6 w-[150px] focus-visible:ring-0 text-gray-900 bg-transparent"
               />
            </div>
            
-           <div className="flex items-center gap-2">
+           <div className="flex items-center gap-2 justify-center flex-1">
               <span className="font-medium text-gray-900">部门/项目:</span>
               <input 
                 value={voucherData.dept}
                 onChange={(e) => updateVoucherData({ dept: e.target.value })}
-                className="border-0 border-b border-gray-800 rounded-none px-1 h-6 w-[190px] focus-visible:ring-0 text-gray-900 bg-transparent"
+                className="border-0 border-b border-gray-800 rounded-none px-1 h-6 w-[150px] focus-visible:ring-0 text-gray-900 bg-transparent"
+              />
+           </div>
+
+           <div className="flex items-center gap-2 justify-end">
+              <span className="font-medium text-gray-900">制单人:</span>
+              <input 
+                value={voucherData.preparer}
+                onChange={(e) => updateVoucherData({ preparer: e.target.value })}
+                className="border-0 border-b border-gray-800 rounded-none px-1 h-6 w-[100px] focus-visible:ring-0 text-gray-900 bg-transparent"
               />
            </div>
 
@@ -128,8 +137,9 @@ export function Voucher() {
                 <textarea 
                   className="absolute inset-0 w-full h-full resize-none p-2 text-sm bg-transparent border-none focus:ring-0 focus:bg-yellow-50/20 leading-tight"
                   value={voucherData.summary}
-                  onChange={(e) => updateVoucherData({ summary: e.target.value })}
+                  onChange={(e) => updateVoucherData({ summary: e.target.value.slice(0, 72) })}
                   placeholder="自动生成..."
+                  maxLength={72}
                 />
              </div>
              <div className="w-40 flex items-center justify-end font-mono font-bold text-base px-2 bg-slate-50/30 relative">

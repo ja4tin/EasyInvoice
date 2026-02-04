@@ -13,27 +13,30 @@ export function useExportPdf() {
     //   - Cross (2x2) -> Landscape (l)
     //   - Vertical (1x2) -> Portrait (p)
     
-    let orientation: 'p' | 'l' = 'p';
+    const filename = 'combined_export.pdf';
     
-    if (appMode === 'invoice') {
-        if (invoiceLayout === 'cross') {
-            orientation = 'l';
-        } else {
-            orientation = 'p';
-        }
+    // Find all pages inside the print container
+    const printContainer = document.getElementById('print-container');
+    if (!printContainer) {
+        console.error("Print container not found");
+        return null;
     }
 
-    const filename = appMode === 'payment' ? 'payment_voucher.pdf' : 'reimbursement_invoice.pdf';
-    
-    // Find all pages
-    const pages = document.querySelectorAll('.bg-white.shadow-lg');
+    // We select the children divs of .print-page-wrapper > .bg-white
+    const pages = printContainer.querySelectorAll('.print-page-wrapper > div');
+
     if (!pages || pages.length === 0) {
       console.warn("No pages found to export");
       return null;
     }
 
+    // Initialize PDF (Orientation will be set per page)
+    const firstPage = pages[0] as HTMLElement;
+    const firstOrientation = firstPage.getAttribute('data-orientation') || 'p';
+    
+    // jsPDF instantiation
     const pdf = new jsPDF({
-      orientation,
+      orientation: firstOrientation as 'p' | 'l',
       unit: 'mm',
       format: 'a4',
       compress: true
@@ -41,7 +44,8 @@ export function useExportPdf() {
 
     for (let i = 0; i < pages.length; i++) {
         const originalPage = pages[i] as HTMLElement;
-        
+        const orientation = originalPage.getAttribute('data-orientation') || 'p';
+
         // 1. Clone the page
         const clonedPage = originalPage.cloneNode(true) as HTMLElement;
         
@@ -53,7 +57,12 @@ export function useExportPdf() {
         clonedPage.style.position = 'fixed';
         clonedPage.style.top = '-9999px';
         clonedPage.style.left = '-9999px';
-        clonedPage.style.zIndex = '-1000';
+        clonedPage.style.zIndex = '5000'; // Make sure it's above hidden container? invalid z-index, but needs to be rendered.
+        // Actually, if it's in a hidden container (opacity 0), html2canvas might record it as transparent?
+        // Safe bet: append to document.body, make it visible there.
+        clonedPage.style.opacity = '1'; 
+        clonedPage.style.visibility = 'visible';
+
         // - Ensure dimensions are locked (A4)
         const isLandscape = orientation === 'l';
         clonedPage.style.width = isLandscape ? '297mm' : '210mm';
@@ -72,12 +81,6 @@ export function useExportPdf() {
            let isEmpty = true;
            inputs.forEach(input => {
              const val = input.value.trim();
-             // Check if value is truly "empty" (0 is considered empty for amount if user desires, but usually 0.00 is a value. 
-             // Request says "empty", usually implying no data entry.
-             // If type is number, '0' might be default. Let's check if it's '0' or empty.
-             // Actually, the user said "Amount and Usage are empty". 
-             // In FileItem, empty amount might be rendered as 0 or empty string.
-             // Let's assume '0', '0.00' or '' is empty.
              if (val && val !== '0' && val !== '0.00') {
                isEmpty = false;
              }
@@ -89,7 +92,9 @@ export function useExportPdf() {
         });
         
         // 3. Process Inputs: Replace <input> with <div> text
-        // We need to query both the original and the clone to map values correctly
+        // Query original from PrintContainer to get values? 
+        // Inputs in PrintContainer are fully rendered? Yes.
+        // But are they bound to values? Yes, they are React components in PrintContainer.
         const originalInputs = originalPage.querySelectorAll('input, textarea');
         const clonedInputs = clonedPage.querySelectorAll('input, textarea');
         
@@ -101,12 +106,16 @@ export function useExportPdf() {
             const replacement = document.createElement('div');
             
             // Copy computed styles to ensure it looks identical
+            // NOTE: originalInput is inside a hidden/opacity-0 container. COMPUTED STYLES MIGHT BE WEIRD?
+            // "visibility: hidden" elements have styles. "display: none" elements don't.
+            // PrintContainer is "opacity-0 pointer-events-none". It is visible in layout.
             const computedStyle = window.getComputedStyle(originalInput);
+
             replacement.style.fontFamily = computedStyle.fontFamily;
             replacement.style.fontSize = computedStyle.fontSize;
             replacement.style.fontWeight = computedStyle.fontWeight;
             replacement.style.textAlign = computedStyle.textAlign;
-            replacement.style.color = computedStyle.color;
+            replacement.style.color = computedStyle.color; // Might be transparent if opacity inherited? No, opacity is on parent.
             replacement.style.boxSizing = computedStyle.boxSizing;
             
             // Critical: Copy exact dimensions and box model
@@ -129,20 +138,17 @@ export function useExportPdf() {
             else replacement.style.justifyContent = 'flex-start';
 
             // Set text value
-            // Handle empty values or 0 properly
             const val = originalInput.value;
             replacement.textContent = val;
 
-            // Add a specific class for debugging if needed
             replacement.className = clonedInput.className; 
             
-            // Replace in clone
             if (clonedInput.parentNode) {
                 clonedInput.parentNode.replaceChild(replacement, clonedInput);
             }
         }
 
-        // 4. Append clone to body
+        // 4. Append clone to body (outside hidden container)
         document.body.appendChild(clonedPage);
         
         try {
@@ -151,17 +157,21 @@ export function useExportPdf() {
             scale: 2, 
             useCORS: true,
             logging: false,
-            // We can leave everything enabled as we've sanitized the inputs
-            backgroundColor: '#ffffff' 
+            backgroundColor: '#ffffff',
+            // Increase timeout for loading?
+            onclone: () => {
+                // Ensure opacity is reset if it leaked
+                // (Done via style above)
+            }
           });
           
           const imgData = canvas.toDataURL('image/jpeg', 1.0); // Max quality
           
-          const pdfWidth = orientation === 'p' ? 210 : 297;
-          const pdfHeight = orientation === 'p' ? 297 : 210;
+          const pdfWidth = isLandscape ? 297 : 210;
+          const pdfHeight = isLandscape ? 210 : 297;
           
           if (i > 0) {
-            pdf.addPage();
+            pdf.addPage('a4', isLandscape ? 'l' : 'p');
           }
           
           pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);

@@ -45,6 +45,7 @@ export interface VoucherData {
   date: string;
   payee: string; // 报销人
   dept: string;  // 部门/项目
+  preparer: string; // 制单人
   financialSupervisor: string; // 财务主管
   bookkeeper: string; // 记账
   cashier: string;    // 出纳
@@ -79,6 +80,11 @@ export type InvoiceState = {
   getPaymentItems: () => InvoiceItem[];
   getInvoiceItems: () => InvoiceItem[];
   getAllAssignedItems: () => InvoiceItem[];
+
+  // Task-400: Selection & Resizing
+  selectedId: string | null;
+  selectItem: (id: string | null) => void;
+  resizeItem: (id: string, width: number, height: number) => void;
 }
 
 export type SettingsState = {

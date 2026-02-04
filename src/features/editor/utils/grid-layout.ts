@@ -65,33 +65,51 @@ export const calculateLayout = (items: InvoiceItem[], options: LayoutOptions = {
   };
 
   items.forEach((item) => {
-    let w = 2; // Default 2x2 (Payment Mode)
-    let h = 2;
+    // Default dimensions based on mode
+    let w = 2;
+    let h = 3; // Default 2x3 (Vertical Standard)
 
-    // Invoice Mode Layout Logic
     if (appMode === 'invoice') {
        if (invoiceLayout === 'vertical') {
-         // 1x2 Grid: Full Width, Half Height
+         // Vertical layout: Top/Bottom split
          w = 4;
          h = 3; 
        } else {
-         // Cross (2x2) Grid: Half Width, Half Height
+         // Grid layout (default): 2x2 grid
          w = 2;
          h = 3;
        }
+       // In invoice mode, we ignore custom item dimensions to enforce uniformity
+    } else {
+      // Payment Voucher mode: Use defaults or custom dimensions
+      if (item.width && item.width > 0) w = item.width;
+      if (item.height && item.height > 0) h = item.height;
     }
+
+    // Safety: Clamp dimensions to grid size
+    w = Math.min(w, GRID_COLS);
+    h = Math.min(h, GRID_ROWS);
 
     let placed = false;
     let pageIndex = 0;
 
-    while (!placed) {
+    // Safety: Prevent infinite loops
+    while (!placed && pageIndex < 100) {
       const pageGrid = getPage(pageIndex);
       
-      // Optimization for standard layouts to skip occupied rows faster
-      // Not strictly necessary but good for performance if many items
-      
+      // SPECIAL LOGIC: 4x3 Item on Page 1 with Voucher
+      // User Request: "When 4x3, align to bottom grid. Leave empty grid below voucher."
+      // Voucher occupies Rows 0, 1.
+      // 4x3 needs 3 rows.
+      // Normal fit might put it at Row 2 (if available).
+      // We want to force it to Row 3 (Rows 3, 4, 5).
+      let startRow = 0;
+      if (appMode === 'payment' && showVoucher && pageIndex === 0 && w === 4 && h === 3) {
+        startRow = 3; // Force start at Row 3 (0-indexed)
+      }
+
       // Find first slot
-      for (let r = 0; r <= GRID_ROWS - h; r++) {
+      for (let r = startRow; r <= GRID_ROWS - h; r++) {
         for (let c = 0; c <= GRID_COLS - w; c++) {
           
           // Check if fits

@@ -45,6 +45,7 @@ export const useInvoiceStore = create<InvoiceState>()(
         isSummaryDirty: false,
       },
       isVoucherVisible: true,
+      isExporting: false,
       toggleVoucherVisibility: (visible) => {
         set((state) => ({
           isVoucherVisible: visible !== undefined ? visible : !state.isVoucherVisible
@@ -233,6 +234,8 @@ export const useInvoiceStore = create<InvoiceState>()(
       },
 
       selectedId: null,
+      setIsExporting: (status) => set({ isExporting: status }),
+      
       selectItem: (id) => set({ selectedId: id }),
       resizeItem: (id, width, height) => {
         set((state) => ({

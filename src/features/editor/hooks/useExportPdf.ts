@@ -2,9 +2,12 @@ import { useCallback } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { useSettingsStore } from '@/store/useSettingsStore';
+import { useInvoiceStore } from '@/store/useInvoiceStore';
+import { type SettingsState } from '@/types';
 
 export function useExportPdf() {
-  const { appMode, invoiceLayout } = useSettingsStore(state => state.settings);
+  const { appMode, invoiceLayout } = useSettingsStore((state: SettingsState) => state.settings);
+  const setIsExporting = useInvoiceStore(state => state.setIsExporting);
 
   const generatePdf = useCallback(async () => {
     // Determine orientation based on appMode and invoiceLayout
@@ -72,6 +75,19 @@ export function useExportPdf() {
         const hiddenElements = clonedPage.querySelectorAll('.pdf-export-hidden');
         hiddenElements.forEach(el => {
            (el as HTMLElement).style.display = 'none';
+        });
+
+        // Force white background for marked containers (Bugfix-502)
+        const whiteBgElements = clonedPage.querySelectorAll('.pdf-export-bg-white');
+        whiteBgElements.forEach(el => {
+           (el as HTMLElement).style.backgroundColor = '#ffffff';
+        });
+
+        // Force remove borders for marked containers (Bugfix-503)
+        const borderNoneElements = clonedPage.querySelectorAll('.pdf-export-border-none');
+        borderNoneElements.forEach(el => {
+           (el as HTMLElement).style.border = 'none';
+           (el as HTMLElement).style.boxShadow = 'none';
         });
 
         // Hide empty input containers (Amount & Usage)
@@ -189,15 +205,20 @@ export function useExportPdf() {
   }, [appMode, invoiceLayout]);
 
   const generatePdfUrl = useCallback(async () => {
-    const result = await generatePdf();
-    if (!result) return null;
-    
-    const blob = result.pdf.output('blob');
-    return { 
-        url: URL.createObjectURL(blob), 
-        filename: result.filename 
-    };
-  }, [generatePdf]);
+    setIsExporting(true);
+    try {
+      const result = await generatePdf();
+      if (!result) return null;
+      
+      const blob = result.pdf.output('blob');
+      return { 
+          url: URL.createObjectURL(blob), 
+          filename: result.filename 
+      };
+    } finally {
+      setIsExporting(false);
+    }
+  }, [generatePdf, setIsExporting]);
 
   return { generatePdfUrl };
 }

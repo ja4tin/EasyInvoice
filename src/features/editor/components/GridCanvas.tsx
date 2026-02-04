@@ -68,6 +68,9 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import { useAutoResize } from '@/features/editor/hooks/useAutoResize';
 
 import { GridPageRenderer } from "./GridPageRenderer";
+import { EmptyState } from "./EmptyState";
+
+import { type LayoutPosition } from '../utils/grid-layout';
 
 export const GridCanvas = () => {
   const { items, selectItem, selectedId, isVoucherVisible } = useInvoiceStore();
@@ -95,16 +98,20 @@ export const GridCanvas = () => {
   });
   
   const showVoucher = settings.appMode === 'payment' && isVoucherVisible;
+  
+  // Ensure at least one page is shown even when empty to display EmptyState
+  const pagesToShow = pages.length === 0 ? [[] as LayoutPosition[]] : pages;
 
   return (
     <div 
       className="flex flex-col items-center gap-8 py-8 min-h-full w-full relative cursor-default"
     >
       <SortableContext items={canvasItems.map(i => `canvas-${i.id}`)}>
-        {pages.map((pageItems, pageIndex) => (
+        {pagesToShow.map((pageItems, pageIndex) => (
           <div 
              key={pageIndex}
              id={`invoice-page-${pageIndex}`}
+             className="relative"
              // Add onclick handler wrapper because GridPageRenderer doesn't accept onClick
              onClick={(e) => {
                e.stopPropagation();
@@ -128,6 +135,11 @@ export const GridCanvas = () => {
                      />
                   )}
               />
+              
+              {/* Only show EmptyState on the FIRST A4 page when no items exist across all pages */}
+              {pageIndex === 0 && canvasItems.length === 0 && (
+                <EmptyState />
+              )}
           </div>
         ))}
       </SortableContext>

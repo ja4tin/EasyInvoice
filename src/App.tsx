@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { Layout } from "@/components/Layout";
 import { GridCanvas } from "@/features/editor/components/GridCanvas";
 import { DragDropProvider } from "@/providers/DragDropProvider";
+import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
 import { useZoom } from "@/features/editor/hooks/useZoom";
 import { ZoomControls } from "@/features/editor/components/ZoomControls";
 import { useSettingsStore } from "@/store/useSettingsStore";
@@ -67,6 +68,7 @@ function App() {
              />
           </div>
         </div>
+        <LoadingOverlay />
       </Layout>
     </DragDropProvider>
   );

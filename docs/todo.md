@@ -264,16 +264,6 @@
         - [x] 402.5: 处理多页导出：如果有多个 A4 页面，需循环处理。
         - [x] 402.6: **验证**: 点击导出，下载 PDF，打印或缩放查看，确保文字清晰且无 UI 杂质。
 
-- [ ] **Task-403: 数据持久化与恢复测试**
-    - **依赖**: Task-102, Task-300
-    - **上下文**: 确保 IndexedDB 的读写逻辑在复杂数据下依然稳健。
-    - **子任务**:
-        - [ ] 403.1: 编写一个集成测试脚本/流程：上传图片 -> 修改布局 -> 关闭标签页 -> 重新打开。
-        - [ ] 403.2: 验证 Store 是否正确从 `idb-keyval` 恢复了所有状态（包括图片、文字、Dirty 标记）。
-        - [ ] 403.3: 添加 UI 提示：“数据已自动保存”。
-
----
-
 ## 第五阶段：清理与发布 (Phase 5: Polish & Ship)
 
 - [x] **Task-404: Properties Panel & Payment Voucher Logic**
@@ -294,18 +284,18 @@
             - Portrait on Page 1 -> 2x4.
         - [x] 405.3: Update `PropertiesPanel` to restrict `2x4` option ONLY to Page 1 with Voucher. Settings.
 
-- [ ] **Task-500: UI 细节打磨**
+- [x] **Task-500: UI 细节打磨**
     - **依赖**: 所有前置任务
     - **上下文**: 统一 UI 风格，处理空状态和加载状态。
     - **子任务**:
-        - [ ] 500.1: 添加 Empty State：当没有文件时，中间画布显示引导提示。
-        - [ ] 500.2: 添加 Loading State：导出 PDF 时显示全屏遮罩/进度条。
-        - [ ] 500.3: 检查所有 Input 的 Tab 键顺序，确保录入流畅。
+        - [x] 500.1: 添加 Empty State：当没有文件时，中间画布显示引导提示。
+        - [x] 500.2: 添加 Loading State：导出 PDF 时显示全屏遮罩/进度条。
+        - [x] 500.3: 检查所有 Input 的 Tab 键顺序，确保录入流畅。
 
-- [ ] **Task-501: 构建与部署**
+- [x] **Task-501: 构建与部署**
     - **依赖**: 所有前置任务
     - **上下文**: 优化构建配置，准备发布。
     - **子任务**:
-        - [ ] 501.1: 运行 `npm run build`，检查是否有 TypeScript 错误。
-        - [ ] 501.2: 检查构建产物 (`dist/`) 大小。
-        - [ ] 501.3: 部署到 Vercel/Netlify 进行最终环境测试。
+        - [x] 501.1: 运行 `npm run build`，检查是否有 TypeScript 错误。
+        - [x] 501.2: 检查构建产物 (`dist/`) 大小。
+        - [x] 501.3: 部署到 Vercel/Netlify 进行最终环境测试。

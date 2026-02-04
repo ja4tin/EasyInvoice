@@ -223,3 +223,24 @@
   - **Storage**: Updates item image data directly (`fileData`) and resets rotation to 0 after save.
   - **Dependencies**: Integrated `cropperjs` (v1.6.2) and `react-cropper`.
   - **Verification**: Verified via manual build and lint fix.
+
+- **Task-500: UI Details Polishing**
+  - **Empty State**: Added `EmptyState` component for `GridCanvas` when no items are uploaded.
+  - **Loading State**: Added global `LoadingOverlay` triggered during PDF export.
+  - **Tab Order**: Optimized keyboard navigation flow (`Amount` -> `Usage` -> `Remark`) and added `Remark` input field to `FileItem`.
+  - **Stability**: Verified full production build and resolved TypeScript/CSS warnings.
+
+- **Bugfix-501: Export/Print Image Stretching**
+  - **Issue**: `html2canvas` doesn't support `object-fit: contain`, causing images to stretch to `100%` width/height.
+  - **Fix**: Replaced `w-full h-full` with `max-w-full max-h-full w-auto h-auto` in `FileItem.tsx`.
+  - **Verification**: Verified via production build.
+
+- **Bugfix-502: Export/Print Gray Background**
+  - **Issue**: File items have a `bg-slate-100` background for contrast, which looked like "borders" or "excessive gray" in PDF export.
+  - **Fix**: Added `pdf-export-bg-white` class to the container and implemented logic in `useExportPdf` to force background to `#ffffff` during export capture.
+  - **Verification**: Verified via production build.
+
+- **Bugfix-503: Export/Print File Item Borders**
+  - **Issue**: File items have a default light gray border (`border-slate-200`) which was visible in PDF exports.
+  - **Fix**: Added `pdf-export-border-none` class to the outer container and implemented logic in `useExportPdf` to force `border: none` and `box-shadow: none` during export capture.
+  - **Verification**: Verified via production build.

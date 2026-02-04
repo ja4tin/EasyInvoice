@@ -4,7 +4,7 @@ import { useGridLayout } from "@/features/editor/hooks/useGridLayout";
 import { GridPageRenderer } from "./GridPageRenderer";
 
 export const PrintContainer = () => {
-    const { items } = useInvoiceStore();
+    const { items, isVoucherVisible } = useInvoiceStore();
     const { settings } = useSettingsStore();
 
     // 1. Prepare Payment Pages (Always rendered unless specified otherwise, but requirement says Voucher is primary)
@@ -19,7 +19,7 @@ export const PrintContainer = () => {
         rows: 6,
         appMode: 'payment',
         invoiceLayout: 'cross', // Doesn't matter for payment, uses defaults
-        isVoucherVisible: true // Always force voucher on payment print? Yes.
+        isVoucherVisible: isVoucherVisible
     });
 
     // 2. Prepare Invoice Pages
@@ -48,7 +48,7 @@ export const PrintContainer = () => {
                         pageIndex={pageIndex}
                         items={pageItems}
                         appMode="payment"
-                        showVoucher={true} // Always show voucher for payment export
+                        showVoucher={isVoucherVisible} // Respect user setting
                      />
                 </div>
             ))}

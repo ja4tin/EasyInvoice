@@ -58,17 +58,18 @@ export const GridPageRenderer = ({
             id={`page-${appMode}-${pageIndex}`}
             className={cn(
                "relative bg-white shadow-lg print:shadow-none print:m-0 transition-all duration-300 origin-top-left",
-               // Only apply size classes if not scaling manually? 
-               // For print container, we want EXACT mm sizes.
                isLandscape
                  ? "w-[297mm] h-[210mm] min-w-[297mm] min-h-[210mm]"
-                 : "w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm]"
+                 : "w-[210mm] h-[297mm] min-w-[210mm] min-h-[297mm]",
+               appMode === 'payment' ? "p-[5mm]" : "p-0"
              )}
             // data-orientation used by PDF export
             data-orientation={isLandscape ? 'l' : 'p'}
         >
-             {/* Grid Overlay for Visual Guide (Hidden in Print) */}
-             <div className="absolute inset-0 grid grid-cols-4 grid-rows-6 pointer-events-none z-10 pdf-export-hidden">
+             {/* Inner Container for Padding/Grid alignment */}
+             <div className="relative w-full h-full">
+                {/* Grid Overlay for Visual Guide (Hidden in Print) */}
+                <div className="absolute inset-0 grid grid-cols-4 grid-rows-6 pointer-events-none z-10 pdf-export-hidden">
                 {Array.from({ length: 24 }).map((_, i) => {
                   // If voucher is visible on page 0, hide the grid lines for the first 2 rows (indexes 0-7)
                   const isHiddenByVoucher = pageIndex === 0 && showVoucher && i < 8;
@@ -125,6 +126,7 @@ export const GridPageRenderer = ({
              <div className="absolute bottom-2 right-4 text-xs text-muted-foreground print:hidden pdf-export-hidden">
                Page {pageIndex + 1}
              </div>
+           </div>
         </div>
     );
 };

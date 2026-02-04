@@ -28,7 +28,8 @@ export function Voucher() {
 
   return (
 
-    <div className="w-full px-8 pt-2 pb-2 flex flex-col gap-0.5 h-full border-2 border-slate-900">
+
+    <div className="w-full px-8 pt-1 pb-1 flex flex-col gap-0.5 h-full border-2 border-slate-900">
       {/* Header Row: Title & Company */}
       <div className="flex flex-col items-center justify-center relative mb-0.5">
         <input
@@ -46,9 +47,9 @@ export function Voucher() {
       </div>
 
       {/* Meta Row: Date & No */}
-      <div className="flex justify-between items-end border-b-2 border-slate-800 pb-1 mb-0.5">
+      <div className="flex justify-between items-end border-b-2 border-slate-800 pb-0.5 mb-0.5">
          <div className="flex items-center gap-2">
-            <span className="font-semibold text-sm">日期:</span>
+            <span className="font-semibold text-sm text-gray-900">日期:</span>
             <input 
               type="date"
               className="bg-transparent border-none text-sm focus:ring-0 cursor-pointer p-0"
@@ -58,10 +59,10 @@ export function Voucher() {
          </div>
           {/* No. */}
           <div className="flex items-center gap-2 justify-end">
-            <span className="font-semibold text-gray-900 whitespace-nowrap">编号:</span>
-            <div className="border-b border-gray-800 px-2 min-w-[120px] pb-1">
+            <span className="font-semibold text-sm text-gray-900 whitespace-nowrap">编号:</span>
+            <div className="border-b border-slate-900 px-2 min-w-[120px] pb-0.5">
                <input 
-                  className="w-full text-center font-mono text-gray-900 bg-transparent border-none focus:ring-0 p-0 cursor-default leading-none"
+                  className="w-full text-center font-mono text-gray-900 bg-transparent border-none focus:ring-0 p-0 cursor-default leading-none translate-y-[-2px]"
                   value={voucherData.voucherNo}
                   readOnly
                   tabIndex={-1}
@@ -71,7 +72,7 @@ export function Voucher() {
       </div>
 
         {/* Row 2: Info Fields */}
-        <div className="flex items-center justify-between text-sm mt-1">
+        <div className="flex items-center justify-between text-sm mt-0.5">
            <div className="flex items-center gap-2">
               <span className="font-medium text-gray-900">报销人:</span>
               <input 
@@ -103,10 +104,10 @@ export function Voucher() {
       </div>
 
       {/* Summary Row */}
-      <div className="border border-slate-800 mt-1 flex-1 flex flex-col min-h-0">
+      <div className="border border-slate-800 mt-0.5 flex-1 flex flex-col min-h-0">
           {/* Header */}
           <div className="flex border-b border-slate-800 bg-slate-50 text-xs font-bold text-slate-600 shrink-0">
-             <div className="h-9 flex-1 border-r border-slate-800 text-center flex items-center justify-center gap-2 relative">
+             <div className="h-8 flex-1 border-r border-slate-800 text-center flex items-center justify-center gap-2 relative">
                <span className="translate-y-[1px]">用途摘要</span>
                {voucherData.isSummaryDirty && (
                  <button 
@@ -118,11 +119,12 @@ export function Voucher() {
                  </button>
                )}
              </div>
-             <div className="h-9 w-40 text-center flex items-center justify-center relative">
+             <div className="h-8 w-40 text-center flex items-center justify-center relative">
                 <span className="translate-y-[1px]">金额</span>
                 {voucherData.totalAmountOverride !== undefined && (
                   <button 
                     onClick={() => updateVoucherData({ totalAmountOverride: undefined })}
+                    tabIndex={-1}
                     className="absolute right-1 top-1/2 -translate-y-1/2 text-[10px] font-medium text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded border border-blue-200 transition-colors pdf-export-hidden"
                     title="恢复自动计算"
                   >
@@ -137,9 +139,9 @@ export function Voucher() {
                 <textarea 
                   className="absolute inset-0 w-full h-full resize-none p-2 text-sm bg-transparent border-none focus:ring-0 focus:bg-yellow-50/20 leading-tight"
                   value={voucherData.summary}
-                  onChange={(e) => updateVoucherData({ summary: e.target.value.slice(0, 72) })}
+                  onChange={(e) => updateVoucherData({ summary: e.target.value.slice(0, 140) })}
                   placeholder="自动生成..."
-                  maxLength={72}
+                  maxLength={140}
                 />
              </div>
              <div className="w-40 flex items-center justify-end font-mono font-bold text-base px-2 bg-slate-50/30 relative">
@@ -170,18 +172,18 @@ export function Voucher() {
              </div>
           </div>
           {/* Uppercase Total */}
-          <div className="flex border-t border-slate-800 shrink-0">
-              <div className="h-9 w-24 border-r border-slate-800 text-xs font-bold text-slate-600 flex items-center justify-center">
+          <div className="flex border-t border-slate-900 border-b border-slate-900 shrink-0 bg-white">
+              <div className="h-12 w-24 border-r border-slate-900 text-xs font-bold text-slate-600 flex items-center justify-center">
                  <span className="translate-y-[1px]">大写金额</span>
               </div>
-              <div className="h-9 flex-1 text-sm font-medium tracking-wide flex items-center px-3 text-slate-800 bg-white">
+              <div className="h-12 flex-1 text-sm font-medium tracking-wide flex items-center px-3 text-slate-800">
                  <span className="translate-y-[1px]">{digitUppercase(getTotalAmount())}</span>
               </div>
           </div>
       </div>
 
       {/* Footer Signatures */}
-      <div className="grid grid-cols-5 gap-4 mt-1 mb-1 text-xs text-slate-500 shrink-0">
+      <div className="grid grid-cols-5 gap-4 mt-0.5 mb-1 text-xs text-slate-500 shrink-0">
         {[
           { label: '财务主管', key: 'financialSupervisor' },
           { label: '记账', key: 'bookkeeper' },
@@ -193,6 +195,7 @@ export function Voucher() {
                 <span className="font-semibold">{label}:</span>
                 <div className="border-b border-slate-300 w-full">
                   <input 
+                      tabIndex={0}
                       className="w-full focus:outline-none bg-transparent py-0.5 text-slate-900 placeholder:text-transparent"
                       value={voucherData[key as keyof typeof voucherData] as string}
                       onChange={(e) => updateVoucherData({ [key]: e.target.value })}

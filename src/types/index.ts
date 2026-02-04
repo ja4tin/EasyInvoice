@@ -86,6 +86,10 @@ export type InvoiceState = {
   selectItem: (id: string | null) => void;
   resizeItem: (id: string, width: number, height: number) => void;
   updateItemImage: (id: string, newSrc: string) => void;
+
+  // Task-500: UI Polishing
+  isExporting: boolean;
+  setIsExporting: (status: boolean) => void;
 }
 
 export type SettingsState = {

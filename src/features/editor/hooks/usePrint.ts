@@ -1,3 +1,12 @@
+/**
+ * Project: EasyInvoice
+ * File: usePrint.ts
+ * Description: 打印功能 Hook，复用 PDF 生成逻辑进行打印
+ * Author: Ja4tin (ja4tin@hotmail.com)
+ * Date: 2026-02-04
+ * License: MIT
+ */
+
 import { useCallback } from 'react';
 import { useExportPdf } from './useExportPdf';
 
@@ -11,7 +20,7 @@ export function usePrint() {
 
       const { url } = result;
 
-      // Create a hidden iframe
+      // 创建隐藏的 iframe
       const iframe = document.createElement('iframe');
       iframe.style.position = 'fixed';
       iframe.style.top = '-9999px';
@@ -22,21 +31,19 @@ export function usePrint() {
 
       document.body.appendChild(iframe);
 
-      // Wait for content to load then print
+      // 等待内容加载后打印
       iframe.onload = () => {
-        // Short delay to ensure PDF rendering
+        // 短暂延迟确保 PDF 渲染
         setTimeout(() => {
           iframe.contentWindow?.focus();
           iframe.contentWindow?.print();
           
-          // Cleanup after print dialog usage (approximate, hard to know exactly when closed)
-          // Ideally we remove it after some time or usage. 
-          // Since it's a blob url, we should also revoke it.
-          // For simplicity, remove iframe after a delay.
+          // 打印对话框关闭后清理 (近似处理)
+          // 由于无法精确知道打印窗口何时关闭，延迟移除 iframe
           setTimeout(() => {
              document.body.removeChild(iframe);
              URL.revokeObjectURL(url);
-          }, 60000); // 1 min delay to allow print
+          }, 60000); // 1分钟后清理
         }, 500);
       };
 

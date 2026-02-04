@@ -1,3 +1,12 @@
+/**
+ * Project: EasyInvoice
+ * File: useSettingsStore.ts
+ * Description: 全局应用设置状态管理 (主题、网格显示、纸张大小等)
+ * Author: Ja4tin (ja4tin@hotmail.com)
+ * Date: 2026-02-04
+ * License: MIT
+ */
+
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { type SettingsState, type AppSettings } from '@/types'

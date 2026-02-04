@@ -1,3 +1,12 @@
+/**
+ * Project: EasyInvoice
+ * File: PdfPreviewModal.tsx
+ * Description: PDF 预览与下载模态框
+ * Author: Ja4tin (ja4tin@hotmail.com)
+ * Date: 2026-02-04
+ * License: MIT
+ */
+
 import React from 'react';
 import {
   Dialog,
@@ -7,7 +16,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download } from 'lucide-react';
+import { Download, Loader2 } from 'lucide-react';
 
 interface PdfPreviewModalProps {
   isOpen: boolean;
@@ -30,14 +39,14 @@ export const PdfPreviewModal: React.FC<PdfPreviewModalProps> = ({
         <DialogHeader className="px-6 py-4 border-b flex-shrink-0">
           <div className="flex items-center justify-between">
             <DialogTitle>导出预览</DialogTitle>
-             {/* Close button is handled by DialogPrimitive usually, but we can add explicit actions if needed */}
+             {/* 这里的关闭按钮通常由 DialogPrimitive 处理，但我们可以在此添加显式操作 */}
           </div>
         </DialogHeader>
 
         <div className="flex-1 bg-slate-100 p-4 overflow-hidden relative flex items-center justify-center">
             {isGenerating ? (
                 <div className="flex flex-col items-center gap-4">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    <Loader2 className="animate-spin rounded-full h-8 w-8 text-primary" />
                     <p className="text-muted-foreground">正在生成 PDF...</p>
                 </div>
             ) : pdfUrl ? (

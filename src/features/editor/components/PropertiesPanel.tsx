@@ -1,3 +1,12 @@
+/**
+ * Project: EasyInvoice
+ * File: PropertiesPanel.tsx
+ * Description: 右侧属性面板，提供凭单设置和选中项目的属性编辑
+ * Author: Ja4tin (ja4tin@hotmail.com)
+ * Date: 2026-02-04
+ * License: MIT
+ */
+
 import { useInvoiceStore } from '@/store/useInvoiceStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { Button } from '@/components/ui/button';
@@ -28,11 +37,10 @@ export const PropertiesPanel = () => {
   const { appMode, invoiceLayout } = useSettingsStore(state => state.settings);
   const totalAmount = useInvoiceStore(state => state.getTotalAmount());
   
-  // Local state for image editor modal
+  // 图片编辑器模态框状态
   const [isEditorOpen, setIsEditorOpen] = useState(false);
 
-  // Calculate First Page Status for selected item
-  // We need to replicate the layout logic to know which page the item is on
+  // 计算选中项是否在第一页
   const canvasItems = items.filter(item => item.workspaceId === appMode);
   const { pages } = useGridLayout({
     items: canvasItems,
@@ -45,7 +53,6 @@ export const PropertiesPanel = () => {
 
   const selectedItem = selectedId ? items.find(i => i.id === selectedId) : null;
   
-  // Check if selected item is on the first page (index 0)
   let isFirstPage = false;
   if (selectedItem && pages.length > 0) {
       const page0Items = pages[0];
@@ -57,12 +64,12 @@ export const PropertiesPanel = () => {
   if (!voucherData) {
     return (
       <aside className="hidden w-[280px] shrink-0 flex-col border-l bg-background md:flex">
-         <div className="p-4">Loading Invoice Data...</div>
+         <div className="p-4">加载中...</div>
       </aside>
     )
   }
 
-  // File Context View
+  // 文件属性视图
   if (selectedItem) {
     const currentW = selectedItem.width || 2;
     const currentH = selectedItem.height || 3;
@@ -80,7 +87,7 @@ export const PropertiesPanel = () => {
         <ScrollArea className="flex-1">
           <div className="p-4 space-y-6">
             
-            {/* Meta Info */}
+            {/* 元信息 */}
             <div className="space-y-1">
               <div className="text-xs text-muted-foreground uppercase tracking-wider font-bold">文件名</div>
               <div className="text-sm font-medium truncate w-[230px]" title={selectedItem.name}>{selectedItem.name}</div>
@@ -88,7 +95,7 @@ export const PropertiesPanel = () => {
 
             <Separator />
 
-            {/* Size Controls - Only for Payment Voucher Mode */}
+            {/* 尺寸控制 - 仅在 Payment 模式下显示 */}
             {appMode === 'payment' && (
               <>
                 <div className="space-y-3">
@@ -96,14 +103,14 @@ export const PropertiesPanel = () => {
                   <div className="grid grid-cols-2 gap-2">
                     <Button variant={isActiveSize(2, 2) ? "default" : "outline"} size="sm" className="text-xs" onClick={() => resizeItem(selectedItem.id, 2, 2)}>2 x 2 (标准)</Button>
                     
-                    {/* Hide x3 height options on First Page if Voucher is visible */}
+                    {/* 如果在首页且凭单可见，隐藏 3行高 选项 */}
                     {!(isFirstPage && isVoucherVisible) && (
                         <>
                             <Button variant={isActiveSize(2, 3) ? "default" : "outline"} size="sm" className="text-xs" onClick={() => resizeItem(selectedItem.id, 2, 3)}>2 x 3 (竖向标准)</Button>
                         </>
                     )}
 
-                    {/* 2x4 Option: ONLY visible on First Page with Voucher */}
+                    {/* 2x4 选项: 仅在首页且凭单可见时显示 */}
                     {(isFirstPage && isVoucherVisible) && (
                         <Button variant={isActiveSize(2, 4) ? "default" : "outline"} size="sm" className="text-xs" onClick={() => resizeItem(selectedItem.id, 2, 4)}>2 x 4 (纵向半页)</Button>
                     )}
@@ -122,7 +129,7 @@ export const PropertiesPanel = () => {
               </>
             )}
 
-            {/* Rotation & Crop */}
+            {/* 旋转与裁剪 */}
             <div className="space-y-3">
               <Label className="text-xs">图片编辑</Label>
               <div className="flex gap-2">
@@ -140,7 +147,7 @@ export const PropertiesPanel = () => {
 
             <Separator />
 
-            {/* Item Data */}
+            {/* 数据录入 */}
             <div className="space-y-3">
                <Label className="text-xs">数据录入</Label>
                
@@ -152,7 +159,7 @@ export const PropertiesPanel = () => {
                         type="number" 
                         value={selectedItem.amount || ''} 
                         onChange={(e) => updateItem(selectedItem.id, { amount: parseFloat(e.target.value) || 0 })}
-                        className="pl-6 h-8 text-xs" // Reduced padding and font size for cleaner look
+                        className="pl-6 h-8 text-xs"
                      />
                   </div>
                </div>
@@ -165,8 +172,6 @@ export const PropertiesPanel = () => {
                      className="h-8"
                   />
                </div>
-
-
             </div>
 
           </div>
@@ -189,10 +194,10 @@ export const PropertiesPanel = () => {
     );
   }
 
-  // Default Voucher View
+  // 默认凭单设置视图
   return (
     <aside className="hidden w-[280px] min-w-[280px] shrink-0 flex-col border-l bg-background md:flex overflow-hidden">
-      {/* Header */}
+      {/* 头部 */}
       <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
         <h2 className="font-semibold">凭单设置</h2>
       </div>
@@ -200,7 +205,7 @@ export const PropertiesPanel = () => {
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-6">
           
-          {/* Section 1: Voucher Settings (Always visible) */}
+          {/* 基本信息 (始终显示) */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium">基本信息</h3>
@@ -215,7 +220,7 @@ export const PropertiesPanel = () => {
             </div>
             
             <div className="space-y-3">
-               {/* Title */}
+               {/* 标题 */}
                <div className="grid gap-1.5">
                   <Label className="text-xs">标题</Label>
                   <Input 
@@ -225,7 +230,7 @@ export const PropertiesPanel = () => {
                   />
                </div>
 
-               {/* Date */}
+               {/* 日期 */}
                <div className="grid gap-1.5">
                   <Label className="text-xs">日期</Label>
                   <Input 
@@ -236,7 +241,7 @@ export const PropertiesPanel = () => {
                   />
                </div>
                
-               {/* Reimbursant & Dept */}
+               {/* 报销人 & 部门 */}
                <div className="grid grid-cols-1 gap-2">
                   <div className="grid gap-1.5">
                       <Label className="text-xs">报销人</Label>
@@ -258,7 +263,7 @@ export const PropertiesPanel = () => {
                   </div>
                </div>
 
-               {/* Summary */}
+               {/* 摘要 */}
                <div className="grid gap-1.5">
                   <div className="flex items-center justify-between">
                     <Label className="text-xs">用途摘要</Label>
@@ -281,7 +286,7 @@ export const PropertiesPanel = () => {
                   />
                </div>
 
-               {/* Total Amount */}
+               {/* 总金额 */}
                <div className="grid gap-1.5">
                   <div className="flex items-center justify-between">
                     <Label className="text-xs">总金额</Label>
@@ -309,7 +314,7 @@ export const PropertiesPanel = () => {
                           const val = parseFloat(e.target.value);
                           updateVoucherData({ totalAmountOverride: isNaN(val) ? 0 : val });
                         }}
-                        className="h-8 pl-6 text-xs" // Reduced padding and font size
+                        className="h-8 pl-6 text-xs"
                      />
                   </div>
                 </div>

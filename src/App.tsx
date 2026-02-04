@@ -1,3 +1,12 @@
+/**
+ * Project: EasyInvoice
+ * File: App.tsx
+ * Description: 应用根组件，包含拖拽上下文和缩放逻辑
+ * Author: Ja4tin (ja4tin@hotmail.com)
+ * Date: 2026-02-04
+ * License: MIT
+ */
+
 import { useRef } from "react";
 import { Layout } from "@/components/Layout";
 import { GridCanvas } from "@/features/editor/components/GridCanvas";
@@ -12,12 +21,12 @@ function App() {
   const { scale, isAutoFit, zoomIn, zoomOut, setManualScale, resetToAuto } = useZoom(containerRef);
   const { appMode, invoiceLayout } = useSettingsStore(state => state.settings);
 
-  // Determine base dimensions in pixels (approx 3.78 px/mm)
+  // 确定基础尺寸 (像素近似值 3.78 px/mm)
   // A4: 210mm x 297mm
-  // We use CSS mm units for display, but for layout wrapper we can use exact CSS strings
+  // 我们使用 CSS mm 单位进行显示，但对于布局包裹器，我们可以使用精确的 CSS 字符串
   const isLandscape = appMode === 'invoice' && invoiceLayout === 'cross';
   
-  // We must match the dimensions defined in GridCanvas.tsx
+  // 必须匹配 GridCanvas.tsx 中定义的尺寸
   const baseWidth = isLandscape ? '297mm' : '210mm';
   const baseHeight = isLandscape ? '210mm' : '297mm';
 
@@ -30,24 +39,24 @@ function App() {
             ref={containerRef} 
             className="w-full h-full overflow-auto bg-muted/50 scroll-smooth relative flex"
           >
-            {/* Centering Wrapper: Applies margin: auto to center content when smaller than viewport */}
+            {/* 居中包裹器: 当内容小于视口时，应用 margin: auto 进行居中 */}
             <div className="m-auto py-10 origin-top p-[100px]">
-               {/* Scalable Container: reserves the physical space for the scaled content */}
+               {/* 缩放容器: 为缩放后的内容预留物理空间 */}
                <div 
                  style={{ 
                    width: `calc(${baseWidth} * ${scale})`,
-                   height: `calc(${baseHeight} * ${scale - 0.05})`, // Slight adjustment to prevent unnecessary vertical overflow if perfectly fit
+                   height: `calc(${baseHeight} * ${scale - 0.05})`, // 微调以防止完美契合时不必要的垂直溢出
                    position: 'relative'
                  }}
                >
-                  {/* Visual Transform Layer */}
+                  {/*以此为中心进行视觉变换 */}
                   <div 
                     style={{ 
                       transform: `scale(${scale})`,
                       transformOrigin: 'top left',
                       transition: 'transform 0.1s ease-out',
                       width: baseWidth,
-                      height: baseHeight // Enforce base height to overlapping content flow
+                      height: baseHeight // 强制基础高度以重叠内容流
                     }}
                   >
                     <GridCanvas />
@@ -56,7 +65,7 @@ function App() {
             </div>
           </div>
 
-          {/* Zoom Controls Overlay - Absolute to Wrapper */}
+          {/* 缩放控制悬浮窗 - 绝对定位 */}
           <div className="absolute bottom-6 right-6 z-50">
              <ZoomControls 
                scale={scale}

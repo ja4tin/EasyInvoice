@@ -1,4 +1,14 @@
+/**
+ * Project: EasyInvoice
+ * File: Layout.tsx
+ * Description: 全局应用布局组件，包含头部导航、左侧边栏、主工作区和右侧属性面板
+ * Author: Ja4tin (ja4tin@hotmail.com)
+ * Date: 2026-02-04
+ * License: MIT
+ */
+
 import React, { useState } from 'react';
+import GradientText from '@/components/ui/GradientText';
 import { useExportPdf } from '@/features/editor/hooks/useExportPdf';
 import { PdfPreviewModal } from '@/features/export/components/PdfPreviewModal';
 import { Download } from 'lucide-react';
@@ -38,7 +48,7 @@ export const Layout = ({ children }: LayoutProps) => {
   const { print } = usePrint();
   const items = useInvoiceStore(state => state.items);
 
-  // Calculate total pages for Navigator
+  // 计算用于导航的总页数
   const canvasItems = items.filter(item => item.workspaceId === appMode);
   const { totalPages } = useGridLayout({
     items: canvasItems,
@@ -53,7 +63,7 @@ export const Layout = ({ children }: LayoutProps) => {
   const [pdfFilename, setPdfFilename] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
   
-  // Left Sidebar State
+  // 左侧边栏状态
   const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
 
   const handleExportClick = async () => {
@@ -61,7 +71,7 @@ export const Layout = ({ children }: LayoutProps) => {
     setIsGenerating(true);
     setPdfUrl(null);
     
-    // Small delay to allow modal to open
+    // 微小延迟以确保 Modal 打开
     setTimeout(async () => {
       const result = await generatePdfUrl();
       if (result) {
@@ -85,32 +95,31 @@ export const Layout = ({ children }: LayoutProps) => {
 
   return (
     <div className="flex h-screen w-full overflow-hidden flex-col bg-background font-sans antialiased text-foreground">
-      {/* 1. Global Header - Full Width */}
-      {/* 1. Global Header - Full Width */}
+      {/* 1. 全局头部 - 满宽 */}
       <header className="flex h-14 items-center border-b bg-background lg:h-[60px] shrink-0 z-10 w-full justify-between">
-          {/* Logo Section - Persistent Fixed Width (280px) */}
+          {/* Logo 区域 - 固定宽度 (280px) */}
           <div className="flex items-center gap-2 font-semibold w-[280px] border-r border-border shrink-0 h-full px-6 justify-center">
-             {/* Show Open Button if Sidebar is Closed */}
-             {!isLeftSidebarOpen && (
-                 <Button 
-                   variant="ghost" 
-                   size="icon" 
-                   className="-ml-2 h-8 w-8 text-muted-foreground hover:text-foreground mr-2"
-                   onClick={() => setIsLeftSidebarOpen(true)}
-                   title="展开侧边栏"
-                 >
-                    <PanelLeftOpen className="h-4 w-4" />
-                 </Button>
-             )}
-             <a href="/" className="flex items-center gap-2">
-                <img src="/logo.png" alt="Logo" className="w-8 h-8 rounded-full" />
-                <span>EasyInvoice</span>
+             {/* 如果侧边栏收起，显示展开按钮 */}
+
+             <a href="/" className="flex items-center gap-2 group">
+                <img 
+                  src="/logo.png" 
+                  alt="Logo" 
+                  className="w-8 h-8 rounded-full transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110" 
+                />
+                <GradientText 
+                  colors={["#40ffaa", "#4079ff", "#40ffaa", "#4079ff", "#40ffaa"]} 
+                  animationSpeed={3} 
+                  className="text-xl font-bold tracking-tight"
+                >
+                  EasyInvoice
+                </GradientText>
              </a>
           </div>
 
-          {/* Middle Section (Toolbar) - Flex 1 */}
+          {/* 中间区域 (工具栏) - Flex 1 */}
           <div className="flex flex-1 items-center px-4 overflow-hidden justify-between">
-              {/* Contextual Toolbar (PageNav, Layout Select) */}
+              {/* 上下文工具栏 (页面导航, 布局选择) */}
               <div className="flex items-center gap-4">
                   <div className="flex items-center bg-muted rounded-lg p-1 h-8">
                       <button 
@@ -133,10 +142,10 @@ export const Layout = ({ children }: LayoutProps) => {
                       </button>
                   </div>
                   
-                  {/* Page Navigator */}
+                  {/* 页面导航器 */}
                   <PageNavigator totalPages={totalPages} />
 
-                  {/* Invoice Layout Options (Only show in Invoice mode) */}
+                  {/* 发票布局选项 (仅在发票模式下显示) */}
                   {appMode === 'invoice' && (
                      <div className="flex items-center gap-2 border-l pl-4 ml-2">
                         <span className="text-sm text-muted-foreground">布局:</span>
@@ -152,7 +161,7 @@ export const Layout = ({ children }: LayoutProps) => {
                   )}
               </div>
 
-              {/* Action Buttons (Moved to Middle Section Right Side) */}
+              {/* 动作按钮 (移动到中间区域右侧) */}
               <div className="flex items-center gap-2">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
@@ -195,27 +204,27 @@ export const Layout = ({ children }: LayoutProps) => {
               </div>
           </div>
 
-          {/* Right Section (GitHub Link) - Fixed Width (280px) Aligned with Right Sidebar */}
+          {/* 右侧区域 (GitHub Link) - 固定宽度 (280px) 与右侧边栏对齐 */}
           <div className="flex items-center gap-2 w-[280px] border-l border-border shrink-0 h-full px-6 justify-end">
              <Button variant="ghost" size="icon" asChild>
-                <a href="https://github.com/ja4tin/EasyInvoice" target="_blank" rel="noopener noreferrer" title="View on GitHub">
-                    <Github className="w-5 h-5" />
+                <a href="https://github.com/ja4tin/EasyInvoice" target="_blank" rel="noopener noreferrer" title="View on GitHub" className="group">
+                    <Github className="w-5 h-5 transition-transform duration-300 group-hover:scale-125 group-hover:rotate-12" />
                 </a>
              </Button>
           </div>
       </header>
 
-      {/* 2. Body Container */}
+      {/* 2. 主体容器 */}
       <div className="flex flex-1 overflow-hidden">
         
-        {/* Left Sidebar */}
+        {/* 左侧边栏 */}
         <aside 
             className={cn(
             "flex-col border-r bg-muted/30 transition-all duration-300 ease-in-out md:flex overflow-hidden",
             isLeftSidebarOpen ? "w-[280px]" : "w-[50px]"
             )}
         >
-            {/* Inner Header with Collapse Button */}
+            {/* 内部头部包含折叠按钮 */}
             <div className={cn(
                 "flex items-center border-b py-3 transition-all duration-300",
                 isLeftSidebarOpen ? "justify-between px-4 min-w-[280px]" : "justify-center px-0 w-full"
@@ -240,13 +249,13 @@ export const Layout = ({ children }: LayoutProps) => {
             </div>
         </aside>
 
-        {/* Main Workspace */}
+        {/* 主工作区 */}
         <main className="flex flex-1 flex-col relative overflow-hidden bg-muted/50 min-w-0">
              <div 
                className="flex-1 overflow-hidden relative w-full h-full flex flex-col items-center"
                onClick={(e) => {
-                 // Check if the click target is a button, input, or inside a sortable item
-                 // We only want to deselect if clicking the "background"
+                 // 检查点击目标是否为按钮、输入框或可排序项内部
+                 // 我们只希望在点击“背景”时取消选择
                  const target = e.target as HTMLElement;
                  const isInteractive = target.closest('button') || target.closest('input') || target.closest('select') || target.closest('a') || target.closest('[data-no-deselect="true"]');
                  
@@ -259,12 +268,12 @@ export const Layout = ({ children }: LayoutProps) => {
              </div>
         </main>
         
-        {/* Right Sidebar */}
+        {/* 右侧边栏 */}
         <PropertiesPanel />
         
       </div>
 
-      {/* Hidden Print Container for Export */}
+      {/* 隐藏的打印容器 (用于导出) */}
       <PrintContainer />
 
       <PdfPreviewModal 

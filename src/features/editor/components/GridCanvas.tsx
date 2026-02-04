@@ -1,3 +1,12 @@
+/**
+ * Project: EasyInvoice
+ * File: GridCanvas.tsx
+ * Description: 网格画布组件，负责渲染页面、处理拖拽排序和自动分页
+ * Author: Ja4tin (ja4tin@hotmail.com)
+ * Date: 2026-02-04
+ * License: MIT
+ */
+
 import { useGridLayout } from "@/features/editor/hooks/useGridLayout";
 import { FileItem } from "@/features/editor/components/FileItem";
 import { type InvoiceItem } from '@/types';
@@ -5,7 +14,15 @@ import { type InvoiceItem } from '@/types';
 import { SortableContext, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useInvoiceStore } from '@/store/useInvoiceStore';
-// Internal wrapper to handle drag listeners specifically for FileItem
+import { useSettingsStore } from '@/store/useSettingsStore';
+import { useAutoResize } from '@/features/editor/hooks/useAutoResize';
+
+import { GridPageRenderer } from "./GridPageRenderer";
+import { EmptyState } from "./EmptyState";
+
+import { type LayoutPosition } from '../utils/grid-layout';
+
+// 内部包装器，用于处理 FileItem 的拖拽监听器
 function SortableGridItem({ 
   id, 
   item, 
@@ -37,7 +54,7 @@ function SortableGridItem({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 50 : 'auto', // Higher z-index while dragging
+    zIndex: isDragging ? 50 : 'auto', // 拖拽时提高层级
   };
   
   const handleMove = () => {
@@ -45,7 +62,7 @@ function SortableGridItem({
      setWorkspace(item.id, target);
   };
 
-  const moveLabel = appMode === 'payment' ? 'Move to Invoice' : 'Move to Payment';
+  const moveLabel = appMode === 'payment' ? '移动到发票' : '移动到付款凭单';
 
   return (
     <div ref={setNodeRef} style={style} className={className}>
@@ -64,22 +81,14 @@ function SortableGridItem({
   );
 }
 
-import { useSettingsStore } from '@/store/useSettingsStore';
-import { useAutoResize } from '@/features/editor/hooks/useAutoResize';
-
-import { GridPageRenderer } from "./GridPageRenderer";
-import { EmptyState } from "./EmptyState";
-
-import { type LayoutPosition } from '../utils/grid-layout';
-
 export const GridCanvas = () => {
   const { items, selectItem, selectedId, isVoucherVisible } = useInvoiceStore();
   const { settings } = useSettingsStore();
   
-  // Filter items that should be on canvas
+  // 过滤当前工作区的项目
   const canvasItems = items.filter(item => item.workspaceId === settings.appMode);
   
-  // Grid layout calculation
+  // 网格布局计算
   const { pages } = useGridLayout({
     items: canvasItems,
     columns: 4,
@@ -89,7 +98,7 @@ export const GridCanvas = () => {
     isVoucherVisible
   });
 
-  // Enable smart auto-resize on page transitions
+  // 启用页面切换时的智能自动调整大小
   useAutoResize({
     items: items, 
     appMode: settings.appMode,
@@ -99,7 +108,7 @@ export const GridCanvas = () => {
   
   const showVoucher = settings.appMode === 'payment' && isVoucherVisible;
   
-  // Ensure at least one page is shown even when empty to display EmptyState
+  // 即使为空也确保至少显示一页，以便显示 EmptyState
   const pagesToShow = pages.length === 0 ? [[] as LayoutPosition[]] : pages;
 
   return (
@@ -112,7 +121,7 @@ export const GridCanvas = () => {
              key={pageIndex}
              id={`invoice-page-${pageIndex}`}
              className="relative"
-             // Add onclick handler wrapper because GridPageRenderer doesn't accept onClick
+             // 添加 onClick 处理包装器，因为 GridPageRenderer 不接受 onClick
              onClick={(e) => {
                e.stopPropagation();
                selectItem(null); 
@@ -136,7 +145,7 @@ export const GridCanvas = () => {
                   )}
               />
               
-              {/* Only show EmptyState on the FIRST A4 page when no items exist across all pages */}
+              {/* 仅在第一页且无任何项目时显示 EmptyState */}
               {pageIndex === 0 && canvasItems.length === 0 && (
                 <EmptyState />
               )}

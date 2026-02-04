@@ -1,9 +1,19 @@
+/**
+ * Project: EasyInvoice
+ * File: grid-layout.ts
+ * Description: 核心排版算法，负责计算发票在 A4 页面的位置及分页逻辑
+ * Author: Ja4tin (ja4tin@hotmail.com)
+ * Date: 2026-02-04
+ * License: MIT
+ */
+
 import type { InvoiceItem } from '@/types';
+import type { AppMode, InvoiceLayout } from '@/types';
 
 export const GRID_COLS = 4;
 export const GRID_ROWS = 6;
-// Reserve top 2 rows on page 1 for Voucher (if shown)
-export const VOUCHER_ROWS = 2; // 1/3 of page roughly
+// 第1页为凭单预留顶部2行 (如果显示)
+export const VOUCHER_ROWS = 2; 
 
 export interface LayoutPosition {
   x: number;
@@ -15,18 +25,9 @@ export interface LayoutPosition {
 }
 
 export interface LayoutResult {
-  pages: LayoutPosition[][]; // Array of pages, each containing items
+  pages: LayoutPosition[][]; // 页面数组，包含该页所有项目
   totalPages: number;
 }
-
-/**
- * Calculates the layout for a list of items on A4 pages.
- * @param items List of invoice items
- * @param showVoucher Whether to reserve space for the voucher on Page 1
- */
-import type { AppMode, InvoiceLayout } from '@/types';
-
-// ... existing constants ...
 
 export interface LayoutOptions {
   showVoucher?: boolean;
@@ -34,6 +35,11 @@ export interface LayoutOptions {
   invoiceLayout?: InvoiceLayout;
 }
 
+/**
+ * 计算发票列表在 A4 页面上的布局
+ * @param items 发票项目列表
+ * @param options 布局选项
+ */
 export const calculateLayout = (items: InvoiceItem[], options: LayoutOptions = {}): LayoutResult => {
   const { 
     showVoucher = true, 
@@ -45,11 +51,11 @@ export const calculateLayout = (items: InvoiceItem[], options: LayoutOptions = {
   const results: LayoutPosition[][] = [];
 
   const getPage = (pageIndex: number) => {
-    // Extend pages array if needed
+    // 按需扩展页面数组
     while (pages.length <= pageIndex) {
       const newPage = Array(GRID_ROWS).fill(false).map(() => Array(GRID_COLS).fill(false));
       
-      // Payment Mode: Reserve space for voucher on Page 0
+      // 付款凭单模式：在 Page 0 预留凭单位置
       if (appMode === 'payment' && pages.length === 0 && showVoucher) {
         for (let r = 0; r < VOUCHER_ROWS; r++) {
           for (let c = 0; c < GRID_COLS; c++) {
@@ -65,54 +71,52 @@ export const calculateLayout = (items: InvoiceItem[], options: LayoutOptions = {
   };
 
   items.forEach((item) => {
-    // Default dimensions based on mode
+    // 根据模式确定默认尺寸
     let w = 2;
-    let h = 3; // Default 2x3 (Vertical Standard)
+    let h = 3; // 默认 2x3 (Vertical Standard)
 
     if (appMode === 'invoice') {
        if (invoiceLayout === 'vertical') {
-         // Vertical layout: Top/Bottom split
+         // 垂直分栏布局: 上下分栏
          w = 4;
          h = 3; 
        } else {
-         // Grid layout (default): 2x2 grid
+         // 田字格布局: 2x2
          w = 2;
          h = 3;
        }
-       // In invoice mode, we ignore custom item dimensions to enforce uniformity
+       // 发票模式下忽略自定义尺寸以强制统一
     } else {
-      // Payment Voucher mode: Use defaults or custom dimensions
+      // 付款凭单模式：使用默认或自定义尺寸
       if (item.width && item.width > 0) w = item.width;
       if (item.height && item.height > 0) h = item.height;
     }
 
-    // Safety: Clamp dimensions to grid size
+    // 安全检查：限制尺寸不超过网格大小
     w = Math.min(w, GRID_COLS);
     h = Math.min(h, GRID_ROWS);
 
     let placed = false;
     let pageIndex = 0;
 
-    // Safety: Prevent infinite loops
+    // 安全检查：防止无限循环
     while (!placed && pageIndex < 100) {
       const pageGrid = getPage(pageIndex);
       
-      // SPECIAL LOGIC: 4x3 Item on Page 1 with Voucher
-      // User Request: "When 4x3, align to bottom grid. Leave empty grid below voucher."
-      // Voucher occupies Rows 0, 1.
-      // 4x3 needs 3 rows.
-      // Normal fit might put it at Row 2 (if available).
-      // We want to force it to Row 3 (Rows 3, 4, 5).
+      // 特殊逻辑: 4x3 Item 在 Page 1 且有凭单时
+      // 当 4x3 时，对齐到底部网格。凭单占据 Row 0, 1.
+      // 4x3 需要 3 行。正常可能放入 Row 2 (如果空)，但我们希望强制到底部 (Rows 3, 4, 5)。
+      // 实际 Row 2 + 3 行 = Row 2, 3, 4 (5行)。
       let startRow = 0;
       if (appMode === 'payment' && showVoucher && pageIndex === 0 && w === 4 && h === 3) {
-        startRow = 3; // Force start at Row 3 (0-indexed)
+        startRow = 3; // 强制从 Row 3 开始 (0-indexed)
       }
 
-      // Find first slot
+      // 寻找第一个可用位置
       for (let r = startRow; r <= GRID_ROWS - h; r++) {
         for (let c = 0; c <= GRID_COLS - w; c++) {
           
-          // Check if fits
+          // 检查是否能放入
           let fits = true;
           for (let rowOffset = 0; rowOffset < h; rowOffset++) {
             for (let colOffset = 0; colOffset < w; colOffset++) {
@@ -125,7 +129,7 @@ export const calculateLayout = (items: InvoiceItem[], options: LayoutOptions = {
           }
 
           if (fits) {
-            // Place it
+            // 放置项目
             for (let rowOffset = 0; rowOffset < h; rowOffset++) {
               for (let colOffset = 0; colOffset < w; colOffset++) {
                 pageGrid[r + rowOffset][c + colOffset] = true;

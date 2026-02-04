@@ -1,3 +1,11 @@
+/**
+ * Project: EasyInvoice
+ * File: currency.ts
+ * Description: 货币格式化工具，主要用于人民币数字转大写
+ * Author: Ja4tin (ja4tin@hotmail.com)
+ * Date: 2026-02-04
+ * License: MIT
+ */
 
 /**
  * 将数字转换为人民币大写金额

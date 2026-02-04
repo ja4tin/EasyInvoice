@@ -1,5 +1,22 @@
 /**
- * Reads a File object and returns it as a Base64 string.
+ * Project: EasyInvoice
+ * File: image-processing.ts
+ * Description: 图片处理工具库，处理 File 读取、尺寸压缩、Base64 转换及 PDF 解析
+ * Author: Ja4tin (ja4tin@hotmail.com)
+ * Date: 2026-02-04
+ * License: MIT
+ */
+
+import * as pdfjsLib from 'pdfjs-dist';
+
+// 显式设置 worker 路径，适配 Vite 构建环境
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url
+).toString();
+
+/**
+ * 将 File 对象转换为 Base64 字符串
  */
 export const fileToDataUrl = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -13,7 +30,7 @@ export const fileToDataUrl = (file: File): Promise<string> => {
 };
 
 /**
- * Loads an image from a data URL to get its dimensions.
+ * 加载图片以获取尺寸
  */
 export const loadImage = (src: string): Promise<HTMLImageElement> => {
   return new Promise((resolve, reject) => {
@@ -34,8 +51,8 @@ export interface ProcessedImage {
 const MAX_WIDTH = 1500;
 
 /**
- * Processes an image file: reads it, resizes if necessary (max width 1500px),
- * and returns the processed data.
+ * 处理图片文件：读取并压缩尺寸 (最大宽度 1500px)
+ * 返回处理后的 Base64 数据及元信息
  */
 export const processImage = async (file: File): Promise<ProcessedImage> => {
   const originalBase64 = await fileToDataUrl(file);
@@ -43,7 +60,7 @@ export const processImage = async (file: File): Promise<ProcessedImage> => {
 
   let { width, height } = img;
 
-  // Resize if width exceeds MAX_WIDTH
+  // 如果宽度超过最大限制，进行等比缩放
   if (width > MAX_WIDTH) {
     const scale = MAX_WIDTH / width;
     width = MAX_WIDTH;
@@ -56,7 +73,7 @@ export const processImage = async (file: File): Promise<ProcessedImage> => {
     
     if (ctx) {
       ctx.drawImage(img, 0, 0, width, height);
-      // specific type for quality
+      // 使用 0.8 质量压缩 JPEG
       const compressedBase64 = canvas.toDataURL(file.type || 'image/jpeg', 0.8);
       return {
         base64: compressedBase64,
@@ -75,19 +92,8 @@ export const processImage = async (file: File): Promise<ProcessedImage> => {
   };
 };
 
-import * as pdfjsLib from 'pdfjs-dist';
-
-// Explicitly setting the worker source to the version installed in node_modules
-// This requires the build system (Vite) to correctly handle the worker file
-// For simplicity in a standard Vite setup, we can use the CDN or a local copy if the import fails
-// Using a robust dynamic import approach for the worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url
-).toString();
-
 /**
- * Processes a PDF file, converting each page into an image.
+ * 处理 PDF 文件，将每一页转换为独立的图片
  */
 export const processPdf = async (file: File): Promise<ProcessedImage[]> => {
   const arrayBuffer = await file.arrayBuffer();
@@ -97,7 +103,7 @@ export const processPdf = async (file: File): Promise<ProcessedImage[]> => {
 
   for (let i = 1; i <= pageCount; i++) {
     const page = await pdf.getPage(i);
-    const viewport = page.getViewport({ scale: 2.0 }); // Scale 2.0 for better quality
+    const viewport = page.getViewport({ scale: 2.0 }); // 使用 2.0 倍率以保证清晰度
 
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
@@ -113,7 +119,7 @@ export const processPdf = async (file: File): Promise<ProcessedImage[]> => {
 
     const base64 = canvas.toDataURL('image/jpeg', 0.8);
 
-    // Apply the same max width logic as images
+    // 对生成的图片应用同样的尺寸限制逻辑
     const processed = await processImageFromBase64(base64, `${file.name}-page-${i}.jpg`);
     processedImages.push(processed);
   }
@@ -122,7 +128,7 @@ export const processPdf = async (file: File): Promise<ProcessedImage[]> => {
 };
 
 /**
- * Internal helper to process a base64 string as an image (resizing if needed).
+ * 内部辅助函数：处理 Base64 图片 (如需缩放)
  */
 const processImageFromBase64 = async (base64: string, name: string): Promise<ProcessedImage> => {
     const img = await loadImage(base64);

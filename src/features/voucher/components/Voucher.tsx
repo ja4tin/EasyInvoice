@@ -1,3 +1,12 @@
+/**
+ * Project: EasyInvoice
+ * File: Voucher.tsx
+ * Description: 凭单组件，模拟真实报销单样式，支持数据双向绑定和打印
+ * Author: Ja4tin (ja4tin@hotmail.com)
+ * Date: 2026-02-04
+ * License: MIT
+ */
+
 import { useEffect } from "react";
 import { useInvoiceStore } from "@/store/useInvoiceStore";
 import { digitUppercase } from "@/lib/currency";
@@ -10,7 +19,7 @@ export function Voucher() {
     resetSummary 
   } = useInvoiceStore();
   
-  // Auto-fix legacy voucher number or generate if missing
+  // 自动修复旧数据的编号或生成新编号
   useEffect(() => {
     if (!voucherData.voucherNo) {
       const now = new Date();
@@ -22,6 +31,7 @@ export function Voucher() {
       const second = String(now.getSeconds()).padStart(2, '0');
       updateVoucherData({ voucherNo: `${year}${month}${day}${hour}${minute}${second}` });
     } else if (voucherData.voucherNo.length === 14 && voucherData.voucherNo.startsWith('20')) {
+      // 如果是旧的 20xx 开头的 14 位编号，去掉前两位
       updateVoucherData({ voucherNo: voucherData.voucherNo.slice(2) });
     }
   }, [voucherData.voucherNo, updateVoucherData]);
@@ -30,7 +40,7 @@ export function Voucher() {
 
 
     <div className="w-full px-8 pt-1 pb-1 flex flex-col gap-0.5 h-full border-2 border-slate-900">
-      {/* Header Row: Title & Company */}
+      {/* 标题行: 标题 & 公司名称 */}
       <div className="flex flex-col items-center justify-center relative mb-0.5">
         <input
           className="text-2xl font-bold text-center bg-transparent border-b border-transparent hover:border-slate-300 focus:border-primary focus:outline-none transition-colors placeholder:text-slate-300/50"
@@ -46,7 +56,7 @@ export function Voucher() {
         />
       </div>
 
-      {/* Meta Row: Date & No */}
+      {/* 信息行: 日期 & 编号 */}
       <div className="flex justify-between items-end border-b-2 border-slate-800 pb-0.5 mb-0.5">
          <div className="flex items-center gap-2">
             <span className="font-semibold text-sm text-gray-900">日期:</span>
@@ -71,7 +81,7 @@ export function Voucher() {
           </div>
       </div>
 
-        {/* Row 2: Info Fields */}
+        {/* 第二行: 人员信息 */}
         <div className="flex items-center justify-between text-sm mt-0.5">
            <div className="flex items-center gap-2">
               <span className="font-medium text-gray-900">报销人:</span>
@@ -103,9 +113,9 @@ export function Voucher() {
 
       </div>
 
-      {/* Summary Row */}
+      {/* 摘要与金额区域 */}
       <div className="border border-slate-800 mt-0.5 flex-1 flex flex-col min-h-0">
-          {/* Header */}
+          {/* 表头 */}
           <div className="flex border-b border-slate-800 bg-slate-50 text-xs font-bold text-slate-600 shrink-0">
              <div className="h-8 flex-1 border-r border-slate-800 text-center flex items-center justify-center gap-2 relative">
                <span className="translate-y-[1px]">用途摘要</span>
@@ -133,7 +143,7 @@ export function Voucher() {
                 )}
              </div>
           </div>
-          {/* Content */}
+          {/* 内容 */}
           <div className="flex flex-1 min-h-[40px]">
              <div className="flex-1 border-r border-slate-800 relative group">
                 <textarea 
@@ -142,7 +152,7 @@ export function Voucher() {
                   onChange={(e) => updateVoucherData({ summary: e.target.value.slice(0, 140) })}
                   placeholder="自动生成..."
                   maxLength={140}
-                />
+               />
              </div>
              <div className="w-40 flex items-center justify-end font-mono font-bold text-base px-2 bg-slate-50/30 relative">
                 <span className="mr-1">¥</span>
@@ -160,18 +170,13 @@ export function Voucher() {
                     if (!isNaN(val)) {
                        updateVoucherData({ totalAmountOverride: val });
                     } else if (e.target.value === '') {
-                       // Optional: allow empty to type? 
-                       // If empty, maybe set to 0 or undefined? 
-                       // Usually better to just let it be empty string in local state, 
-                       // but binding directly to store number field is tricky.
-                       // For now, let's stick to update if valid number, or 0.
                        updateVoucherData({ totalAmountOverride: 0 });
                     }
                   }}
                 />
              </div>
           </div>
-          {/* Uppercase Total */}
+          {/* 大写金额 */}
           <div className="flex border-t border-slate-900 border-b border-slate-900 shrink-0 bg-white">
               <div className="h-12 w-24 border-r border-slate-900 text-xs font-bold text-slate-600 flex items-center justify-center">
                  <span className="translate-y-[1px]">大写金额</span>
@@ -182,7 +187,7 @@ export function Voucher() {
           </div>
       </div>
 
-      {/* Footer Signatures */}
+      {/* 底部签字栏 */}
       <div className="grid grid-cols-5 gap-4 mt-0.5 mb-1 text-xs text-slate-500 shrink-0">
         {[
           { label: '财务主管', key: 'financialSupervisor' },
@@ -199,7 +204,7 @@ export function Voucher() {
                       className="w-full focus:outline-none bg-transparent py-0.5 text-slate-900 placeholder:text-transparent"
                       value={voucherData[key as keyof typeof voucherData] as string}
                       onChange={(e) => updateVoucherData({ [key]: e.target.value })}
-                      placeholder="Input" // Placeholder to keep height if empty? or just standard height
+                      placeholder="Input" 
                   />
                 </div>
             </div>

@@ -6,9 +6,9 @@
 - [x] 阶段 1：基础设施与项目设置
 - [x] 阶段 2：静态 UI 布局
 - [x] 阶段 3：核心逻辑（网格引擎与状态）
-- [ ] 阶段 3.5：多工作区架构重构 (进行中)
-- [ ] 阶段 4：高级功能（编辑器、导出）
-- [ ] 阶段 5：打磨与发布
+- [x] 阶段 3.5：多工作区架构重构
+- [x] 阶段 4：高级功能（编辑器、导出）
+- [x] 阶段 5：打磨与发布
 
 ## 阶段 1：基础设施与项目设置 (已完成)
 
@@ -76,13 +76,13 @@
     - 重构了 `GridCanvas` 支持多页渲染 (Pagination)。
     - 实现了 Page 1 顶部区域的 Voucher 避让逻辑。
   - [x] **Task-301.1: 凭单渲染优化** (2026-02-03)
-    - [x] Fixed PDF export rendering issues (Voucher border overlap).
-    - [x] Refined Voucher layout spacing (padding, font size, line height).
-    - [x] Implemented "Clean Export" ensuring Grid lines and Page numbers are hidden in PDF.
-    - [x] Implemented conditional visibility for "Amount/Usage" fields (hidden in export if empty).
-    - [x] Implemented Image Rotation functionality (90° steps).
-    - [x] Verified Layout Engine & PDF Preview.
-    - [x] Refined Voucher Layout (Center headers, larger reset btn, fixed export borders).
+    - [x] 修复了 PDF 导出渲染问题（凭单边框重叠）。
+    - [x] 优化了凭单布局间距（内边距、字体大小、行高）。
+    - [x] 实现了“纯净导出”，确保网格线和页码在 PDF 中隐藏。
+    - [x] 实现了“金额/用途”字段的条件可见性（如果为空则在导出时隐藏）。
+    - [x] 实现了图片旋转功能（90度步进）。
+    - [x] 验证了布局引擎与 PDF 预览。
+    - [x] 精修凭单布局（标题居中、更大的重置按钮、修复导出边框）。
   - [x] **Task-302: 双向拖拽实现 (Drag & Drop)** (2026-02-02)
     - 集成 `dnd-kit` 实现全应用拖拽上下文。
     - 实现了 Sidebar `UploadedFileList` 的列表排序。
@@ -128,119 +128,133 @@
     - 验证了所有布局模式下的导出尺寸正确性。
 
 - **2026-02-03**: 完成了右侧属性面板重构 (Task-702)。
-    - **Component Extraction**: 将属性面板逻辑抽取为独立组件 `PropertiesPanel`，改善了 `Layout` 的代码结构。
-    - **Voucher Settings**: 实现了完整的凭单设置表单，支持直接在侧边栏编辑标题、日期、报销人、部门及摘要，并显示实时的总金额。
-    - **Visibility Toggle**: 添加了 "Show Voucher" 开关，允许用户隐藏凭单头部。
-    - **Dynamic Layout**: 更新了网格计算引擎，当凭单隐藏时，第一页自动移除顶部偏移，充分利用空间。
-    - **UI Components**: 手动实现了 `Switch` 和 `Separator` 组件以支持新的面板 UI。
-    - **Stability Fix**: 修复了属性面板在 Store 数据初始化时的崩溃问题，增加了空值保护和语法修正。
-    - **Hotfix (Invoice Mode)**: 修复了切换到发票模式时的白屏崩溃问题 (React Hook Rule Violation)，确保了模式切换的稳定性。
-    - **Visibility Logic**: 调整了 "Voucher Settings" 菜单的可见性逻辑，使其在发票模式下也默认显示，便于全剧数据的统一管理。
-    - **Editable Total**: 实现了 "Total Amount" 的可编辑功能。用户手动修改金额后，会自动覆盖计算值，并提供 "Reset" 按钮恢复自动计算。
-    - **UI Polish**: 统一了属性面板中 "Summary" 和 "Total Amount" 的重置按钮样式，使用蓝色 "重置" 按钮替代了原有的文本链接，与画布上的样式保持一致。
-    - **Canvas Interaction**: 实现了凭单画布上 "金额" 栏的直接编辑功能，并添加了与 "用途摘要" 一致的 "重置" 按钮，提升了操作的便捷性和统一性。
-    - **Visual Fix**: 增加了凭单金额列的宽度 (from w-32 to w-40)，解决了数字较长时最后一位显示不全的问题。
-    - **Input Polish**: 微调了 "报销人" 和 "部门/项目" 输入框的下划线长度 (宽度增加)，并将 "部门/项目" 栏整体向右移动 (Align Right)，满足特定视觉需求。
-    - **Panel Layout**: 将属性面板 (Voucher Settings) 中的 "Reimbursant" 和 "Dept/Project" 输入框改为垂直排列 (Vertical Stack)，优化了侧边栏的空间利用和视觉层级。
-    - **Localization**: 将 "Workspace" 页眉及属性面板 (Properties Panel) 中的所有英文标签翻译为中文，实现了界面的全中文显示。
-    - **PDF Modal**: 将导出预览 (Export Preview) 弹窗中的 "Cancel" 和 "Download PDF" 按钮翻译为 "取消" 和 "下载 PDF"，保持语言一致性。
-    - **Clear Function**: Replaced native `confirm` dialog with `shadcn/ui` `AlertDialog` for the "Clear" action. Improved UX and reliability.
-    - **Canvas Display**: Changed the hardcoded "RECEIPT" label on canvas items to display the actual filename (e.g., "Invoice_001.pdf"), with truncation for long names.
-    - **Canvas Display**: Changed the hardcoded "RECEIPT" label on canvas items to display the actual filename (e.g., "Invoice_001.pdf"), with truncation for long names.
-    - **Upload Logic**: Implemented duplicate file detection in `UploadZone`. Attempting to upload a file that already exists now triggers an `AlertDialog` warning and skips the duplicate file. Fixed a bug where the check failed due to stale closure state.
-    - **UTF-8 Support**: Updated duplicate file detection validation to use `normalize('NFC')`. This ensures that filenames with special characters (e.g., Chinese) are correctly identified as duplicates even if the string encoding references differ slightly.
-    - **Voucher Logic**: Updated `clearAllItems` in `useInvoiceStore` to regenerate the `voucherNo` (timestamp-based) when clearing the workspace. This ensures the voucher ID is refreshed for the next usage.
+    - **组件抽取**: 将属性面板逻辑抽取为独立组件 `PropertiesPanel`，改善了 `Layout` 的代码结构。
+    - **凭单设置**: 实现了完整的凭单设置表单，支持直接在侧边栏编辑标题、日期、报销人、部门及摘要，并显示实时的总金额。
+    - **可见性开关**: 添加了 "显示凭单" 开关，允许用户隐藏凭单头部。
+    - **动态布局**: 更新了网格计算引擎，当凭单隐藏时，第一页自动移除顶部偏移，充分利用空间。
+    - **UI 组件**: 手动实现了 `Switch` 和 `Separator` 组件以支持新的面板 UI。
+    - **稳定性修复**: 修复了属性面板在 Store 数据初始化时的崩溃问题，增加了空值保护和语法修正。
+    - **紧急修复 (发票模式)**: 修复了切换到发票模式时的白屏崩溃问题 (React Hook Rule Violation)，确保了模式切换的稳定性。
+    - **可见性逻辑**: 调整了 "凭单设置" 菜单的可见性逻辑，使其在发票模式下也默认显示，便于全局数据的统一管理。
+    - **可编辑总额**: 实现了 "总金额" 的可编辑功能。用户手动修改金额后，会自动覆盖计算值，并提供 "重置" 按钮恢复自动计算。
+    - **UI 润色**: 统一了属性面板中 "摘要" 和 "总金额" 的重置按钮样式，使用蓝色 "重置" 按钮替代了原有的文本链接，与画布上的样式保持一致。
+    - **画布交互**: 实现了凭单画布上 "金额" 栏的直接编辑功能，并添加了与 "用途摘要" 一致的 "重置" 按钮，提升了操作的便捷性和统一性。
+    - **视觉修复**: 增加了凭单金额列的宽度 (从 w-32 到 w-40)，解决了数字较长时最后一位显示不全的问题。
+    - **输入润色**: 微调了 "报销人" 和 "部门/项目" 输入框的下划线长度 (宽度增加)，并将 "部门/项目" 栏整体向右移动 (右对齐)，满足特定视觉需求。
+    - **面板布局**: 将属性面板 (凭单设置) 中的 "报销人" 和 "部门/项目" 输入框改为垂直排列，优化了侧边栏的空间利用和视觉层级。
+    - **本地化**: 将 "Workspace" 页眉及属性面板 (Properties Panel) 中的所有英文标签翻译为中文，实现了界面的全中文显示。
+    - **PDF 模态框**: 将导出预览 (Export Preview) 弹窗中的 "Cancel" 和 "Download PDF" 按钮翻译为 "取消" 和 "下载 PDF"，保持语言一致性。
+    - **清空功能**: 将原生的 `confirm` 对话框替换为 `shadcn/ui` 的 `AlertDialog` 用于 "清空" 操作。提升了用户体验和可靠性。
+    - **Canvas 显示**: 将 Canvas Item 上的硬编码 "RECEIPT" 标签更改为显示实际文件名（例如 "Invoice_001.pdf"），并对长文件名进行了截断处理。
+    - **上传逻辑**: 在 `UploadZone` 中实现了重复文件检测。尝试上传已存在的文件现在会触发 `AlertDialog` 警告并跳过重复文件。修复了一个由于闭包状态陈旧导致检查失败的 Bug。
+    - **UTF-8 支持**: 更新了重复文件检测验证逻辑，使用 `normalize('NFC')`。这确保了包含特殊字符（如中文）的文件名即使字符串编码引用略有不同，也能正确识别为重复项。
+    - **凭单逻辑**: 更新了 `useInvoiceStore` 中的 `clearAllItems`，在清空工作区时重新生成 `voucherNo`（基于时间戳）。这确保了凭单 ID 在下次使用时被刷新。
 
 ## 最近更新
 
 - **2026-02-03 (Late)**: 完成了打印与清空功能 (Task-700)。
-    - **Print**: 实现了 `usePrint` Hook，利用隐藏 iframe 调用浏览器打印，复用高清 PDF 导出逻辑。
-    - **Clear**: 实现了全局清空功能，保留凭单头部信息（报销人、日期），需二次确认。
-    - **Clear**: 实现了全局清空功能，保留凭单头部信息（报销人、日期），需二次确认。
-    - **Layout Fix**: 微调了凭单编号 (Voucher No) 的 CSS padding，解决了与下划线重叠的视觉问题。
-- **2026-02-03 (Robustness)**: 完成了去重与逻辑增强 (Task-703)。
-    - **Upload**: 实现了基于 UTF-8 归一化的文件名去重，支持 PDF 页面检测，并添加了友好的 Alert 提示。
-    - **State**: 修复了清空操作后凭单号不更新的问题 (`generateVoucherNo`)。
-    - **UI**: Canvas 卡片现在显示真实文件名。
+  - **打印**: 实现了 `usePrint` Hook，利用隐藏 iframe 调用浏览器打印，复用高清 PDF 导出逻辑。
+  - **清空**: 实现了全局清空功能，保留凭单头部信息（报销人、日期），需二次确认。
+  - **布局修复**: 微调了凭单编号 (Voucher No) 的 CSS padding，解决了与下划线重叠的视觉问题。
+- **2026-02-03 (鲁棒性)**: 完成了去重与逻辑增强 (Task-703)。
+  - **上传**: 实现了基于 UTF-8 归一化的文件名去重，支持 PDF 页面检测，并添加了友好的 Alert 提示。
+  - **状态**: 修复了清空操作后凭单号不更新的问题 (`generateVoucherNo`)。
+  - **UI**: Canvas 卡片现在显示真实文件名。
 - **2026-02-03 (Early)**: 完成了导出与打印优化 (Task-603)，修复了布局方向与裁剪问题，新增了 PDF 预览。
-    - **紧急修复**: 解决了 PDF 导出时的渲染问题 (Task-Fix-Rendering)，通过 "Clone & Replace" 策略修复了凭单和文件项 (Amount/Usage) 输入框内容的显示异常，确保导出结果清晰准确。
-    - **UI 优化**: 重构了 `FileItem` 组件 (Task-UI-Refine)，实现了标签与输入框同行显示，移除了备注栏，并将 Header 改为悬停显示，最大化图片展示空间。
-    - **Voucher 布局精修**: 
-        - 隐藏了导出时的“重置”按钮。
-        - 优化了表格垂直间距和头部对齐。
-        - 确保了签字线下划线在导出时可见。
-- **2026-02-03 (Fixes)**:
-    - **Page Navigator**: Implemented ID-based scroll tracking (`intersectionObserver`) to fix page indicator update issues.
-    - **Build**: Fixed all TypeScript build errors and Layout syntax issues.
-    - **Refinement**: Moved Page Navigator to Header for better accessibility.
+  - **紧急修复**: 解决了 PDF 导出时的渲染问题 (Task-Fix-Rendering)，通过 "Clone & Replace" 策略修复了凭单和文件项 (Amount/Usage) 输入框内容的显示异常，确保导出结果清晰准确。
+  - **UI 优化**: 重构了 `FileItem` 组件 (Task-UI-Refine)，实现了标签与输入框同行显示，移除了备注栏，并将 Header 改为悬停显示，最大化图片展示空间。
+  - **凭单布局精修**:
+    - 隐藏了导出时的“重置”按钮。
+    - 优化了表格垂直间距和头部对齐。
+    - 确保了签字线下划线在导出时可见。
+- **2026-02-03 (Bug修复)**:
+  - **Page Navigator**: 实现了基于 ID 的滚动跟踪 (`intersectionObserver`)，修复了页面指示器更新问题。
+  - **Build**: 修复了所有 TypeScript 构建错误和 Layout 语法问题。
+  - **Refinement**: 将页面导航器移动到页眉，以获得更好的可访问性。
 - **2026-02-02**: 完成了 Task-600，实现了多工作区的数据模型基础与全局汇总逻辑。正在进行侧边栏 UI 重构。
 - **2026-02-02**: 完成了 Invoice Mode 的核心开发与验证，支持了纯报销单模式下的多种布局策略。
 - **2026-01-30**：确认了网格布局的自动填坑 (Dense Packing) 策略。初始化了文档。
 
 ### 2026-02-04
-- [x] **Task-400: Properties Panel Interaction** - Implemented item selection, resizing, and contextual properties panel. verified with unit tests.ectItem` action in `useInvoiceStore`.
-  - Updated `FileItem` to support visual selection state.
-  - Enabled contextual rendering in `PropertiesPanel` (Voucher vs File settings).
-  - Implemented item resizing (`resizeItem` action) and layout updates (`calculateLayout`).
-  - Added unit tests for layout engine and store logic using Vitest.
-  - **Fixed Critical Bug**: Fixed application freeze/crash on file upload caused by infinite loop in layout engine when item dimensions were unchecked. Added strict dimension clamping and safety break.
+- [x] **Task-400: 属性面板交互** - 实现了项目选择、调整大小和上下文属性面板。通过单元测试验证。
+  - 更新了 `FileItem` 以支持可视化的选中状态。
+  - 启用了 `PropertiesPanel` 中的上下文渲染（凭单与文件设置）。
+  - 实现了项目调整大小 (`resizeItem` action) 和布局更新 (`calculateLayout`)。
+  - 使用 Vitest 添加了布局引擎和 Store 逻辑的单元测试。
+  - **修复严重 Bug**: 修复了文件上传时因未选中项目尺寸而导致布局引擎进入无限循环从而导致应用冻结/崩溃的问题。添加了严格的尺寸限制和安全中断。
 
 ### 2026-02-04 (Part 2)
-- **Task-401: Dimension Refinement**
-  - Updated default file dimensions from 2x2 to 2x3 (Vertical Standard).
-  - Updated PropertiesPanel UI: Removed 1x1/4x4, added 2x3 option.
-  - Verified with updated unit tests.
+- **Task-401: 尺寸优化**
+  - 将默认文件尺寸从 2x2 更新为 2x3（垂直标准）。
+  - 更新了 PropertiesPanel UI：移除了 1x1/4x4，添加了 2x3 选项。
+  - 通过更新后的单元测试进行了验证。
 
-- **Task-402: Properties Panel UI Polish**
-  - Fixed right-side content truncation by increasing panel width to 320px and adding `shrink-0`.
-  - Added visual active state (highlight) for the selected dimension button.
+- **Task-402: 属性面板 UI 润色**
+  - 通过将面板宽度增加到 320px 并添加 `shrink-0` 修复了右侧内容截断的问题。
+  - 为选中的尺寸按钮添加了可视化的激活状态（高亮）。
 
-- **Task-403: Invoice Mode Logic & UI Fixes**
-  - **Layout**: Enforced fixed dimensions for "Reimbursement Invoice" (invoice) mode.
-      - Grid Layout: 2x2.
-      - Vertical Layout: 4x3 (Top/Bottom split).
-  - **Properties Panel**: 
-      - Increased width to **350px** to prevent truncation.
-      - Automatically **hidden size controls** when in "Reimbursement Invoice" mode (fixed size).
+- **Task-403: 发票模式逻辑与 UI 修复**
+  - **布局**: 强制“报销发票”模式使用固定尺寸。
+      - 网格布局: 2x2。
+      - 垂直布局: 4x3 (上下分栏)。
+  - **属性面板**: 
+      - 宽度增加到 **350px** 以防止截断。
+      - 在“报销发票”模式下自动 **隐藏尺寸控制**（固定尺寸）。
 
-- **Task-404: Properties Panel & Payment Voucher Logic**
-  - **First Page Detection**: Implemented logic in `PropertiesPanel` to detect if the selected item is on Page 1.
-  - **Dimension Restrictions**: 
-      - If `appMode === 'payment'` AND `isVoucherVisible` AND `isFirstPage`:
-      - **Hidden**: 2x3 and 4x3 options (to avoid wasting space below voucher).
-      - **Allowed**: 2x2, 2x4, 4x2 options.
-  - **Interaction**: Confirmed background click deselects items.
+- **Task-404: 属性面板与付款凭单逻辑**
+  - **首页检测**: 在 `PropertiesPanel` 中实现了检测选中项目是否在第 1 页的逻辑。
+  - **尺寸限制**: 
+      - 如果 `appMode === 'payment'` 且 `isVoucherVisible` 且 `isFirstPage`:
+      - **隐藏**: 2x3 和 4x3 选项（避免浪费凭单下方的空间）。
+      - **允许**: 2x2, 2x4, 4x2 选项。
+  - **交互**: 确认点击背景可取消选中项目。
 
-- **Task-405: Smart Default Dimensions**
-  - **Upload Logic**: 
-      - **Landscape**: Defaults to 4x3 (Standard) or 4x2 (Page 1 + Voucher).
-      - **Portrait**: Defaults to 2x3 (Standard) or 2x4 (Page 1 + Voucher).
-  - **Option Logic**: Restricted `2x4` option to be visible ONLY on Page 1 with Voucher.
+- **Task-405: 智能默认尺寸**
+  - **上传逻辑**: 
+      - **横向**: 默认为 4x3（标准）或 4x2（第 1 页 + 凭单）。
+      - **纵向**: 默认为 2x3（标准）或 2x4（第 1 页 + 凭单）。
+  - **选项逻辑**: 限制 `2x4` 选项仅在带有凭单的第 1 页可见。
 
-- **Task-401 (Revisited): Image Editor**
-  - **Core Component**: Implemented `ImageEditorModal` using `react-cropper`.
-  - **Integration**: Added "Crop / Edit" button to `PropertiesPanel`.
-  - **Storage**: Updates item image data directly (`fileData`) and resets rotation to 0 after save.
-  - **Dependencies**: Integrated `cropperjs` (v1.6.2) and `react-cropper`.
-  - **Verification**: Verified via manual build and lint fix.
+- **Task-401 (重访): 图片编辑器**
+  - **核心组件**: 使用 `react-cropper` 实现了 `ImageEditorModal`。
+  - **集成**: 在 `PropertiesPanel` 中添加了“裁剪 / 编辑”按钮。
+  - **存储**: 直接更新项目图片数据 (`fileData`) 并在保存后重置旋转角度为 0。
+  - **依赖**: 集成了 `cropperjs` (v1.6.2) 和 `react-cropper`。
+  - **验证**: 通过手动构建和 lint 修复进行了验证。
 
-- **Task-500: UI Details Polishing**
-  - **Empty State**: Added `EmptyState` component for `GridCanvas` when no items are uploaded.
-  - **Loading State**: Added global `LoadingOverlay` triggered during PDF export.
-  - **Tab Order**: Optimized keyboard navigation flow (`Amount` -> `Usage` -> `Remark`) and added `Remark` input field to `FileItem`.
-  - **Stability**: Verified full production build and resolved TypeScript/CSS warnings.
+- **Task-500: UI 细节打磨**
+  - **空状态**: 为 `GridCanvas` 添加了 `EmptyState` 组件（当未上传项目时）。
+  - **加载状态**: 添加了全局 `LoadingOverlay`，在 PDF 导出期间触发。
+  - **Tab 顺序**: 优化了键盘导航流程 (`金额` -> `用途` -> `备注`) 并在 `FileItem` 中添加了 `备注` 输入字段。
+  - **稳定性**: 验证了完整的生产构建并解决了 TypeScript/CSS 警告。
 
-- **Bugfix-501: Export/Print Image Stretching**
-  - **Issue**: `html2canvas` doesn't support `object-fit: contain`, causing images to stretch to `100%` width/height.
-  - **Fix**: Replaced `w-full h-full` with `max-w-full max-h-full w-auto h-auto` in `FileItem.tsx`.
-  - **Verification**: Verified via production build.
+- **Bugfix-501: 导出/打印图片拉伸**
+  - **问题**: `html2canvas` 不支持 `object-fit: contain`，导致图片拉伸至 `100%` 宽/高。
+  - **修复**: 在 `FileItem.tsx` 中将 `w-full h-full` 替换为 `max-w-full max-h-full w-auto h-auto`。
+  - **验证**: 通过生产构建验证。
 
-- **Bugfix-502: Export/Print Gray Background**
-  - **Issue**: File items have a `bg-slate-100` background for contrast, which looked like "borders" or "excessive gray" in PDF export.
-  - **Fix**: Added `pdf-export-bg-white` class to the container and implemented logic in `useExportPdf` to force background to `#ffffff` during export capture.
-  - **Verification**: Verified via production build.
+- **Bugfix-502: 导出/打印灰色背景**
+  - **问题**: 文件项具有 `bg-slate-100` 背景以增加对比度，这在 PDF 导出中看起来像“边框”或“多余的灰色”。
+  - **修复**: 为容器添加了 `pdf-export-bg-white` 类，并在 `useExportPdf` 中实现了导出捕获期间强制背景为 `#ffffff` 的逻辑。
+  - **验证**: 通过生产构建验证。
 
-- **Bugfix-503: Export/Print File Item Borders**
-  - **Issue**: File items have a default light gray border (`border-slate-200`) which was visible in PDF exports.
-  - **Fix**: Added `pdf-export-border-none` class to the outer container and implemented logic in `useExportPdf` to force `border: none` and `box-shadow: none` during export capture.
-  - **Verification**: Verified via production build.
+- **Bugfix-503: 导出/打印文件项边框**
+  - **问题**: 文件项具有默认的浅灰色边框 (`border-slate-200`)，在 PDF 导出中可见。
+  - **修复**: 为外部容器添加了 `pdf-export-border-none` 类，并在 `useExportPdf` 中实现了导出捕获期间强制 `border: none` 和 `box-shadow: none` 的逻辑。
+  - **验证**: 通过生产构建验证。
+
+- **2026-02-04 (Refactoring)**: 完成了全局重构与代码规范化 (Task-800)。
+  - **File Headers**: 为所有源文件 (`src/**/*`) 添加了标准统一的文件头注释 (File, Description, License)。
+  - **Localization**: 将代码中的所有注释和 UI 文本全面中文化，方便维护。
+  - **Logic**: 移除了未使用的死代码 (`TestComponents.tsx`)。
+  - **Stability**: 验证了重构后的构建稳定性，确保无功能回退。
+
+- **2026-02-04 (Documentation)**: (Task-900)。
+  - **Translation**: 将所有项目文档 (`specs.md`, `tech-stack.md`, `architecture.md`, `progress.md`, `todo.md`) 翻译为中文。
+  - **Formatting**: 修正了部分 markdownlint 格式警告。
+  - **Consistency**: 统一了文档结构与术语（如 "Workspace", "Layout Engine"）。
+
+- **2026-02-04 (UI Refinement)**: 界面细节优化。
+  - **Cleanup**: 移除了 Header 中冗余的侧边栏展开按钮，优化了界面整洁度。
+  - **Animation**: 实现了 Logo 和 Github 图标的 Hover 缩放/旋转动效，以及 "EasyInvoice" 标题的流光渐变效果 (Gradient Text)。
+

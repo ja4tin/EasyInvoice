@@ -1,3 +1,12 @@
+/**
+ * Project: EasyInvoice
+ * File: index.ts
+ * Description: 全局类型定义文件
+ * Author: Ja4tin (ja4tin@hotmail.com)
+ * Date: 2026-02-04
+ * License: MIT
+ */
+
 export interface BaseEntity {
   id: string;
   createdAt: number;
@@ -6,22 +15,21 @@ export interface BaseEntity {
 
 export interface InvoiceItem extends BaseEntity {
   name: string;
-  fileData: string; // Base64 or Blob URL usually, keeping generic string for now
+  fileData: string; // Base64 或 Blob URL
   width: number;
   height: number;
-  x?: number; // Grid position X
-  y?: number; // Grid position Y
+  x?: number; // Grid X 坐标
+  y?: number; // Grid Y 坐标
   rotation?: number;
-  workspaceId: 'payment' | 'invoice' | null; // Multi-workspace support
-  // isOnCanvas?: boolean; // DEPRECATED: Replaced by workspaceId
+  workspaceId: 'payment' | 'invoice' | null; // 多工作区支持
   
-  // Data binding properties
-  amount?: number; // 废弃，使用 string 以避免精度问题? No, use number but handle with decimal.js in store
-  amountStr?: string; // Optional: raw input string
+  // 数据绑定字段
+  amount?: number; // 金额 (用于计算)
+  amountStr?: string; // 原始输入字符串
   usage?: string; // 用途
   remark?: string; // 备注
-  invoiceDate?: string;
-  category?: string;
+  invoiceDate?: string; // 开票日期
+  category?: string; // 类别
 }
 
 export type AppMode = 'payment' | 'invoice';
@@ -31,9 +39,9 @@ export interface AppSettings {
   theme: 'light' | 'dark' | 'system';
   showGrid: boolean;
   paperSize: 'a4';
-  margin: number; // Global margin in mm
+  margin: number; // 全局边距 (mm)
   
-  // New settings for Task-305
+  // 工作模式设置
   appMode: AppMode;
   invoiceLayout: InvoiceLayout;
 }
@@ -70,24 +78,24 @@ export type InvoiceState = {
   updateVoucherData: (updates: Partial<VoucherData>) => void;
   setWorkspace: (id: string, workspaceId: 'payment' | 'invoice' | null) => void;
   
-  // New actions & selectors
+  // 汇总与清理 Actions
   resetSummary: () => void;
   clearAllItems: () => void;
   getTotalAmount: () => number;
   getAutoSummary: () => string;
   
-  // Workspace selectors
+  // 工作区 Selectors
   getPaymentItems: () => InvoiceItem[];
   getInvoiceItems: () => InvoiceItem[];
   getAllAssignedItems: () => InvoiceItem[];
 
-  // Task-400: Selection & Resizing
+  // 选中与缩放 Actions
   selectedId: string | null;
   selectItem: (id: string | null) => void;
   resizeItem: (id: string, width: number, height: number) => void;
   updateItemImage: (id: string, newSrc: string) => void;
 
-  // Task-500: UI Polishing
+  // UI 状态
   isExporting: boolean;
   setIsExporting: (status: boolean) => void;
 }

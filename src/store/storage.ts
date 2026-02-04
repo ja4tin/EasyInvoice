@@ -1,3 +1,12 @@
+/**
+ * Project: EasyInvoice
+ * File: storage.ts
+ * Description: Zustand 中间件的存储适配器，使用 idb-keyval (IndexedDB)
+ * Author: Ja4tin (ja4tin@hotmail.com)
+ * Date: 2026-02-04
+ * License: MIT
+ */
+
 import { get, set, del } from 'idb-keyval';
 import { type StateStorage } from 'zustand/middleware';
 

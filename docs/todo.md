@@ -105,15 +105,15 @@
         - [x] 300.1: 定义 `ReimburseItem` TypeScript 接口 (Using `InvoiceItem`).
         - [x] 300.2: 在左侧栏实现文件拖拽上传区域 (Dropzone).
         - [x] 300.3: 实现图片读取逻辑：File -> Base64.
-        - [x] 400.7: **Verification**: Select item, change size, verify layout updates.
-        - [x] Install vitest.
-        - [x] Create unit tests for store and layout logic.
-        - [x] Run tests and fix any issues (Fixed infinite loop crash).
-        - [x] **Task-401: Dimension Refinement**
-    - [x] 401.1: Remove 1x1 and 4x4 options from PropertiesPanel.
-    - [x] 401.2: Add 2x3 option to PropertiesPanel.
-    - [x] 401.3: Update default file dimensions to 2x3 in layout engine/store.
-    - [x] 401.4: Update unit tests to reflect new defaults. (Fixed infinite loop crash).
+        - [x] 400.7: **验证**: 选中项目，更改尺寸，验证布局更新。
+        - [x] 安装 Vitest。
+        - [x] 为 Store 和布局逻辑创建单元测试。
+        - [x] 运行测试并修复问题 (修复了无限循环崩溃)。
+        - [x] **Task-401: 尺寸优化**
+    - [x] 401.1: 从 PropertiesPanel 中移除 1x1 和 4x4 选项。
+    - [x] 401.2: 在 PropertiesPanel 中添加 2x3 选项。
+    - [x] 401.3: 在布局引擎/Store 中将默认文件尺寸更新为 2x3。
+    - [x] 401.4: 更新单元测试以反映新的默认设置。(修复了无限循环崩溃)。
         - [x] 300.4: **关键**: 实现图片压缩逻辑（Canvas 绘制，限制 max-width 1500px）.
         - [x] 300.5: 更新 Store，实现 `addFiles` action (Using `addItems`).
         - [x] 300.6: **验证**: 上传 5 张大图，检查 Store 中是否生成了压缩后的数据对象，且左侧列表能显示缩略图.
@@ -124,7 +124,7 @@
             - [x] 304.3: 更新 `UploadZone` 支持 `.pdf` 并调用新的处理逻辑.
             - [x] 304.4: **验证**: 上传多页 PDF，列表应展示多个对应的图片 Item.
 
-- [ ] **Task-305: 发票模式与分流逻辑 (Invoice Mode & Routing)**
+- [x] **Task-305: 发票模式与分流逻辑 (Invoice Mode & Routing)**
     - **Status**: *Replaced by Phase 3.5 Detailed Tasks*
 
 ---
@@ -173,12 +173,12 @@
         - [x] 603.4: **验证**: 切换到 Invoice 模式，确认画布变为横向；导出 PDF，确认 PDF 页面为横向且内容排版正确。
 
 ### 2026-02-02
-- **Task-602 Completed**: Implemented canvas interaction features including 'Move' button to switch items between workspaces.
-- **Task-603 Completed**: Adapted "Reimbursement Invoice" workspace for landscape layout and implemented PDF export functionality.
-  - Added `useExportPdf` hook for generating PDFs.
-  - Configured dynamic canvas dimensions based on workspace mode.
-  - Added "Export PDF" button to the main toolbar.
-  - **Task-Fix-Rendering**: Fixed PDF export rendering issues by replacing inputs with styled text elements during capture (Clone & Replace strategy), ensuring clean output for both Voucher and FileItems.
+- **Task-602 完成**: 实现了画布交互功能，包括在工作区之间切换项目的“移动”按钮。
+- **Task-603 完成**: 为“报销发票”工作区适配了横向布局，并实现了 PDF 导出功能。
+  - 添加了用于生成 PDF 的 `useExportPdf` Hook。
+  - 根据工作区模式配置动态画布尺寸。
+  - 在主工具栏添加了“导出 PDF”按钮。
+  - **Task-Fix-Rendering**: 通过在捕获期间将输入替换为样式化文本元素（克隆与替换策略），修复了 PDF 导出渲染问题，确保凭单和文件项的输出清晰。
 
 ---
 
@@ -266,23 +266,23 @@
 
 ## 第五阶段：清理与发布 (Phase 5: Polish & Ship)
 
-- [x] **Task-404: Properties Panel & Payment Voucher Logic**
-    - **Dependency**: Task-400
-    - **Context**: User requests specific dimension constraints for the first page when the voucher is visible.
-    - **Sub-tasks**:
-        - [x] 404.1: Identify "First Page" status of selected item in `PropertiesPanel`.
-        - [x] 404.2: Conditionally filter dimension options (hide x3 heights) on Page 1.
-        - [x] 404.3: Verify workspace background click returns to Voucher Settings.
+- [x] **Task-404: 属性面板与付款凭单逻辑**
+    - **依赖**: Task-400
+    - **上下文**: 用户要求在凭单可见时，对第一页应用特定的尺寸限制。
+    - **子任务**:
+        - [x] 404.1: 在 `PropertiesPanel` 中识别选中项目的“第一页”状态。
+        - [x] 404.2: 在第一页上有条件地过滤尺寸选项（隐藏 x3 高度）。
+        - [x] 404.3: 验证点击工作区背景是否返回凭单设置。
 
-- [x] **Task-405: Smart Default Dimensions & First Page Logic**
-    - **Dependency**: Task-404
-    - **Context**: User requests default dimensions based on aspect ratio and stricter constraints for Page 1 with Voucher.
-    - **Sub-tasks**:
-        - [x] 405.1: Implement Aspect Ratio Detection on Upload (Landscape -> 4x3, Portrait -> 2x3).
-        - [x] 405.2: Implement "First Page" Overlay Logic (Override defaults if on Page 1 & Voucher Visible).
-            - Landscape on Page 1 -> 4x2.
-            - Portrait on Page 1 -> 2x4.
-        - [x] 405.3: Update `PropertiesPanel` to restrict `2x4` option ONLY to Page 1 with Voucher. Settings.
+- [x] **Task-405: 智能默认尺寸与首页逻辑**
+    - **依赖**: Task-404
+    - **上下文**: 用户要求根据宽高比设置默认尺寸，并对带有凭单的第一页实施更严格的限制。
+    - **子任务**:
+        - [x] 405.1: 实现上传时的宽高比检测（横向 -> 4x3，纵向 -> 2x3）。
+        - [x] 405.2: 实现“第一页”覆盖逻辑（如果位于带有可见凭单的第一页，则覆盖默认值）。
+            - 第一页横向 -> 4x2。
+            - 第一页纵向 -> 2x4。
+        - [x] 405.3: 更新 `PropertiesPanel`，将 `2x4` 选项限制为仅在带有凭单的第一页可见。
 
 - [x] **Task-500: UI 细节打磨**
     - **依赖**: 所有前置任务

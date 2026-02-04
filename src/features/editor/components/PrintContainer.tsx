@@ -1,3 +1,12 @@
+/**
+ * Project: EasyInvoice
+ * File: PrintContainer.tsx
+ * Description: 打印容器组件，渲染所有需要打印或导出的页面，平时不可见
+ * Author: Ja4tin (ja4tin@hotmail.com)
+ * Date: 2026-02-04
+ * License: MIT
+ */
+
 import { useInvoiceStore } from '@/store/useInvoiceStore';
 import { useSettingsStore } from '@/store/useSettingsStore';
 import { useGridLayout } from "@/features/editor/hooks/useGridLayout";
@@ -7,36 +16,32 @@ export const PrintContainer = () => {
     const { items, isVoucherVisible } = useInvoiceStore();
     const { settings } = useSettingsStore();
 
-    // 1. Prepare Payment Pages (Always rendered unless specified otherwise, but requirement says Voucher is primary)
-    // Requirement says: "Print Voucher first". "If workspace empty, don't print."
-    // What is "Payment Workspace Empty"?
-    // User answer: "If text exists (always true), print voucher."
-    // So Payment is ALWAYS printed basically.
+    // 1. 准备付款凭单页面
+    // 需求: "优先打印凭单"。"如果工作区有内容则打印"。
+    // 只要有文本，Payment 就总被视为有内容。
     const paymentItems = items.filter(item => item.workspaceId === 'payment');
     const { pages: paymentPages } = useGridLayout({
         items: paymentItems,
         columns: 4,
         rows: 6,
         appMode: 'payment',
-        invoiceLayout: 'cross', // Doesn't matter for payment, uses defaults
+        invoiceLayout: 'cross', // Payment 模式下不起作用，使用默认
         isVoucherVisible: isVoucherVisible
     });
 
-    // 2. Prepare Invoice Pages
-    // Requirement: "If invoice workspace has uploaded files, print. If empty, don't print."
+    // 2. 准备发票页面
+    // 需求: "如果发票工作区有上传文件，则打印。如果为空，不打印。"
     const invoiceItems = items.filter(item => item.workspaceId === 'invoice');
     const showInvoice = invoiceItems.length > 0;
     
-    // We need to calculate layout for invoice items using the CURRENT invoice settings (layout type)
-    // But store settings might be in 'payment' mode. 
-    // We should use `settings.invoiceLayout` which is global/persistent.
+    // 使用全局的 invoiceLayout 设置来计算发票布局
     const { pages: invoicePages } = useGridLayout({
         items: invoiceItems,
         columns: 4,
         rows: 6,
         appMode: 'invoice',
         invoiceLayout: settings.invoiceLayout,
-        isVoucherVisible: false // Never show voucher on invoice pages
+        isVoucherVisible: false // 发票页面永不显示凭单
     });
 
     return (
@@ -48,7 +53,7 @@ export const PrintContainer = () => {
                         pageIndex={pageIndex}
                         items={pageItems}
                         appMode="payment"
-                        showVoucher={isVoucherVisible} // Respect user setting
+                        showVoucher={isVoucherVisible} // 遵循用户设置
                      />
                 </div>
             ))}
@@ -56,19 +61,6 @@ export const PrintContainer = () => {
             {/* Invoice Section */}
             {showInvoice && invoicePages.map((pageItems, pageIndex) => (
                 <div key={`invoice-${pageIndex}`} className="print-page-wrapper">
-                     {/* 
-                         Reset page index for visual display? 
-                         Or continue numbering? 
-                         Requirement says "Pagination logic: Force new page. Order OK."
-                         But doesn't specify if page numbers restart. 
-                         Usually they restart or continue. GridPageRenderer just shows "Page X".
-                         Let's just pass index 0, 1, 2... for now.
-                         Wait, if I pass pageIndex, it will show "Page 1".
-                         If user wants continuous numbering, I should offset it.
-                         "Page 1" of Invoice might be confusing if it's the 2nd page of PDF.
-                         But usually attachments are separate documents.
-                         Let's keep them as 0-indexed relative to their section for now.
-                     */}
                      <GridPageRenderer 
                         pageIndex={pageIndex}
                         items={pageItems}

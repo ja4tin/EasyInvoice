@@ -1,3 +1,12 @@
+/**
+ * Project: EasyInvoice
+ * File: useInvoiceStore.ts
+ * Description: 全局状态管理 Store，管理发票、凭单数据及应用状态
+ * Author: Ja4tin (ja4tin@hotmail.com)
+ * Date: 2026-02-04
+ * License: MIT
+ */
+
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { v4 as uuidv4 } from 'uuid'
@@ -5,7 +14,7 @@ import { type InvoiceState, type InvoiceItem, type BaseEntity } from '@/types'
 import { idbStorage } from './storage'
 import Decimal from 'decimal.js'
 
-// Helper to create entity
+// 创建实体辅助函数
 const createEntity = (data: Omit<InvoiceItem, keyof BaseEntity>): InvoiceItem => ({
   id: uuidv4(),
   createdAt: Date.now(),
@@ -46,22 +55,21 @@ export const useInvoiceStore = create<InvoiceState>()(
       },
       isVoucherVisible: true,
       isExporting: false,
+      
       toggleVoucherVisibility: (visible) => {
         set((state) => ({
           isVoucherVisible: visible !== undefined ? visible : !state.isVoucherVisible
         }));
       },
+      
       addItems: (itemsData) => {
         set((state) => {
-          // If we want to auto-assign to current view, we need to know the view.
-          // But store doesn't know view state (kept in Settings).
-          // For now, default to Unassigned (null) as per plan, or maybe 'payment' for backward compat?
-          // Plan said: "default to null workspaceId".
+          // 默认不分配工作区，由用户拖拽分配
           const newItems = [...state.items, ...itemsData.map(d => createEntity(d))];
           return { items: newItems };
         });
         
-        // Auto-update summary
+        // 自动更新摘要
         const state = get();
         if (!state.voucherData.isSummaryDirty) {
           set((state) => ({
@@ -69,17 +77,19 @@ export const useInvoiceStore = create<InvoiceState>()(
           }));
         }
       },
+      
       addItem: (itemData) => 
         set((state) => ({
           items: [...state.items, createEntity(itemData)],
         })),
+        
       removeItem: (id, hardDelete = false) => {
         set((state) => {
           if (hardDelete) {
-            // Permanently delete
+            // 永久删除
              return { items: state.items.filter((item) => item.id !== id) };
           } else {
-            // Just remove from workspace (set to null)
+            // 仅从工作区移除 (重置为 null)
             return {
               items: state.items.map(item => 
                 item.id === id ? { ...item, workspaceId: null, updatedAt: Date.now() } : item
@@ -87,7 +97,7 @@ export const useInvoiceStore = create<InvoiceState>()(
             };
           }
         });
-        // Auto-update summary
+        // 自动更新摘要
         const state = get();
         if (!state.voucherData.isSummaryDirty) {
            set((state) => ({
@@ -95,6 +105,7 @@ export const useInvoiceStore = create<InvoiceState>()(
            }));
         }
       },
+      
       updateItem: (id, updates) => {
         set((state) => ({
           items: state.items.map((item) =>
@@ -102,7 +113,7 @@ export const useInvoiceStore = create<InvoiceState>()(
           ),
         }));
         
-        // Auto-update summary
+        // 自动更新摘要
         const state = get();
         if (!state.voucherData.isSummaryDirty) {
            set((state) => ({
@@ -110,6 +121,7 @@ export const useInvoiceStore = create<InvoiceState>()(
            }));
         }
       },
+      
       reorderItems: (oldIndex, newIndex) =>
         set((state) => {
           const newItems = [...state.items];
@@ -117,7 +129,9 @@ export const useInvoiceStore = create<InvoiceState>()(
           newItems.splice(newIndex, 0, removed);
           return { items: newItems };
         }),
+        
       setItems: (items) => set({ items }),
+      
       updateVoucherData: (updates) => {
         set((state) => {
           const isSummaryUpdate = 'summary' in updates;
@@ -132,18 +146,18 @@ export const useInvoiceStore = create<InvoiceState>()(
           };
         });
       },
+      
       setWorkspace: (id, workspaceId) => {
         set((state) => ({
           items: state.items.map((item) => {
             if (item.id !== id) return item;
             
-            // If moving to 'unassigned', clear data?
-            // "Task-537: 修复工作区移除文件逻辑：移除时保留 Sidebar 条目但清空数据"
+            // 如果移出工作区，清除相关数据
             if (workspaceId === null && item.workspaceId !== null) {
                return { 
                 ...item, 
                 workspaceId,
-                // Reset data fields
+                // 重置数据字段
                 amount: undefined,
                 amountStr: '',
                 usage: '',
@@ -154,14 +168,11 @@ export const useInvoiceStore = create<InvoiceState>()(
               };
             }
             
-            // If switching from payment to invoice or vice versa, keep data?
-            // "Task-600.3: 支持从一个工作区移动到另一个"
-            // Usually we keep data when moving between valid workspaces.
             return { ...item, workspaceId, updatedAt: Date.now() };
           }),
         }));
 
-        // Auto-update summary
+        // 自动更新摘要
         const state = get();
         if (!state.voucherData.isSummaryDirty) {
            set((state) => ({
@@ -189,17 +200,14 @@ export const useInvoiceStore = create<InvoiceState>()(
         }));
       },
 
-
-
       getTotalAmount: () => {
-        // Check for manual override first
+        // 优先检查手动覆盖值
         const { voucherData } = get();
         if (voucherData.totalAmountOverride !== undefined && voucherData.totalAmountOverride !== null) {
           return voucherData.totalAmountOverride;
         }
 
-        // GLOBAL AGGREGATION: Sum ALL assigned items (Payment + Invoice)
-        // workspaceId can be 'payment' or 'invoice'
+        // 全局汇总：计算所有已分配项目 (Payment + Invoice)
         return get().items.reduce((sum, item) => {
           if (item.workspaceId === 'payment' || item.workspaceId === 'invoice') {
              const val = new Decimal(item.amount || 0);
@@ -210,7 +218,7 @@ export const useInvoiceStore = create<InvoiceState>()(
       },
 
       getAutoSummary: () => {
-        // GLOBAL AGGREGATION: Summarize usage from ALL assigned items
+        // 全局汇总：提取所有已分配项目的用途
         const usages = get().items
           .filter(item => item.workspaceId === 'payment' || item.workspaceId === 'invoice')
           .map(item => item.usage?.trim())
@@ -255,12 +263,12 @@ export const useInvoiceStore = create<InvoiceState>()(
     {
       name: 'easyinvoice-storage',
       storage: createJSONStorage(() => idbStorage),
-      version: 3, // Increment version
+      version: 3,
       migrate: (persistedState: any, version) => {
         let state = persistedState;
         
         if (version === 0) {
-          // Migration from v0 to v1
+          // 迁移 v0 -> v1
           state = {
             ...state,
             items: state.items.map((item: any) => ({
@@ -272,7 +280,7 @@ export const useInvoiceStore = create<InvoiceState>()(
         }
 
         if (version < 2) {
-          // Migration to v2: Add voucherData and isVoucherVisible
+          // 迁移 v1 -> v2: 添加 voucherData 和 isVoucherVisible
           state = {
             ...state,
             voucherData: state.voucherData || {
@@ -282,7 +290,7 @@ export const useInvoiceStore = create<InvoiceState>()(
               date: new Date().toISOString().split('T')[0],
               payee: '',
               dept: '',
-              preparer: '', // Initialize preparer
+              preparer: '',
               financialSupervisor: '',
               bookkeeper: '',
               cashier: '',
@@ -296,7 +304,7 @@ export const useInvoiceStore = create<InvoiceState>()(
         }
         
         if(version < 3) {
-           // Migration to v3: Ensure preparer exists if not already (for existing v2 users)
+           // 迁移 v2 -> v3: 确保 preparer 字段存在
            state = {
              ...state,
              voucherData: {

@@ -1,3 +1,12 @@
+/**
+ * Project: EasyInvoice
+ * File: FileItem.tsx
+ * Description: 发票/收据项目组件，支持拖拽、旋转、修改数据
+ * Author: Ja4tin (ja4tin@hotmail.com)
+ * Date: 2026-02-04
+ * License: MIT
+ */
+
 import { type InvoiceItem } from "@/types";
 import { cn } from "@/lib/utils";
 import { RotateCw, Trash2, ArrowRightLeft } from "lucide-react";
@@ -9,9 +18,9 @@ interface FileItemProps {
   onSelect?: () => void;
   onDelete?: () => void;
   onUpdate?: (updates: Partial<InvoiceItem>) => void;
-  onMove?: () => void; // New prop for moving workspaces
-  moveActionLabel?: string; // Tooltip text
-  dragHandleProps?: Record<string, any>; // For dnd-kit listeners/attributes
+  onMove?: () => void; // 移动工作区
+  moveActionLabel?: string; // 提示文本
+  dragHandleProps?: Record<string, any>; // dnd-kit 属性
 }
 
 export function FileItem({ 
@@ -22,7 +31,7 @@ export function FileItem({
   onDelete,
   onUpdate,
   onMove,
-  moveActionLabel = "Move to other workspace",
+  moveActionLabel = "移动到其他工作区",
   dragHandleProps
 }: FileItemProps) {
   const { fileData, amount } = data;
@@ -39,13 +48,13 @@ export function FileItem({
         onSelect?.();
       }}
     >
-      {/* Visual Header / Drag Handle (Hover Only) */}
+      {/* 视觉头部 / 拖拽手柄 (仅悬浮显示) */}
       <div 
         className="absolute top-0 inset-x-0 z-20 h-7 bg-white/95 backdrop-blur-sm border-b border-slate-100 flex items-center justify-between px-2 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity duration-200"
         {...dragHandleProps}
       >
          <span className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider truncate max-w-[120px]" title={data.name}>{data.name || 'RECEIPT'}</span>
-         {/* Hover Actions */}
+         {/* 悬浮操作 */}
          <div className="flex gap-1">
              {onMove && (
               <button 
@@ -69,7 +78,7 @@ export function FileItem({
               }}
               onPointerDown={(e) => e.stopPropagation()}
               onMouseDown={(e) => e.stopPropagation()}
-              title="Rotate 90°"
+              title="旋转 90°"
             >
               <RotateCw size={13} />
             </button>
@@ -79,13 +88,14 @@ export function FileItem({
               onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
               onPointerDown={(e) => e.stopPropagation()}
               onMouseDown={(e) => e.stopPropagation()}
+              title="删除"
             >
               <Trash2 size={13} />
             </button>
          </div>
       </div>
 
-      {/* Image Preview Area (Maximize Space) */}
+      {/* 图片预览区域 (最大化空间) */}
       <div className="flex-1 min-h-0 w-full bg-slate-100 pdf-export-bg-white overflow-hidden relative flex items-center justify-center rounded-t-lg">
         {fileData ? (
           <img 
@@ -94,10 +104,10 @@ export function FileItem({
             style={{ 
               transform: (() => {
                 const r = data.rotation || 0;
-                // Check if rotated 90 or 270 degrees
+                // 检查是否旋转了 90 或 270 度
                 if (Math.abs(r % 180) === 90) {
-                  // Calculate scale to fit. 
-                   // If w=2, h=4: we need to fit '4' into '2' (scale 0.5) and '2' into '4' (fine).
+                  // 计算适应比例
+                  // 如果 w=2, h=4: 需要将 '4' 放入 '2' (scale 0.5) 和 '2' 放入 '4' (fine).
                   const w = data.width || 2;
                   const h = data.height || 2;
                   const scale = Math.min(w/h, h/w);
@@ -110,18 +120,18 @@ export function FileItem({
           />
         ) : (
           <div className="text-slate-300 flex flex-col items-center">
-             <span className="text-xs">No Image</span>
+             <span className="text-xs">无图片</span>
           </div>
         )}
       </div>
 
-      {/* Input Area (Compact & Inline) */}
+      {/* 输入区域 (紧凑 & 内联) */}
       <div 
         className="p-1 bg-white rounded-b-lg border-t border-slate-100 z-10 relative text-[10px] grid grid-cols-12 gap-1 export-input-container"
         onPointerDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
       >
-        {/* Amount */}
+        {/* 金额 */}
         <div className="col-span-4 flex items-center gap-1 min-w-0">
            <label className="font-semibold text-slate-400 whitespace-nowrap shrink-0 scale-90">金额</label>
            <input 
@@ -133,7 +143,7 @@ export function FileItem({
               onFocus={(e) => e.target.select()}
            />
         </div>
-        {/* Usage */}
+        {/* 用途 */}
         <div className="col-span-4 flex items-center gap-1 min-w-0">
            <label className="font-semibold text-slate-400 whitespace-nowrap shrink-0 scale-90">用途</label>
            <input 
@@ -144,7 +154,7 @@ export function FileItem({
               onChange={(e) => onUpdate?.({ usage: e.target.value })}
            />
         </div>
-        {/* Remark */}
+        {/* 备注 */}
         <div className="col-span-4 flex items-center gap-1 min-w-0">
            <label className="font-semibold text-slate-400 whitespace-nowrap shrink-0 scale-90">备注</label>
            <input 

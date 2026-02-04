@@ -1,3 +1,12 @@
+/**
+ * Project: EasyInvoice
+ * File: useAutoFit.ts
+ * Description: 自动计算缩放比例，使 A4 内容适应容器
+ * Author: Ja4tin (ja4tin@hotmail.com)
+ * Date: 2026-02-04
+ * License: MIT
+ */
+
 import { useState, useEffect, type RefObject } from 'react';
 
 // A4 尺寸 (96 DPI)
@@ -22,13 +31,10 @@ export function useAutoFit(containerRef: RefObject<HTMLElement | null>) {
       const scaleX = availableWidth / A4_WIDTH_PX;
       const scaleY = availableHeight / A4_HEIGHT_PX;
 
-      // 取较小值以确保完全放入，且最大不超过 1 (如果不希望放大的话，但为了适配大屏，通常也不限制放大，或者限制在1.5?)
-      // 用户要求“看见一整个A4页面”，通常意味着Fit。如果屏幕很大，放大也是合理的。
-      // 这里暂不限制最大值，或者限制为 1.2 以免过大。
-      // 考虑到用户体验，通常 fit-to-screen 意味着自适应。
+      // 取较小值以确保完全放入
       const newScale = Math.min(scaleX, scaleY);
       
-      // 保持一定的最小值，避免太小不可见（极端情况）
+      // 保持一定的最小值，避免太小不可见
       setScale(Math.max(0.1, newScale)); 
     };
 

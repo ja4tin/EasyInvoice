@@ -1,3 +1,12 @@
+/**
+ * Project: EasyInvoice
+ * File: ZoomControls.tsx
+ * Description: 缩放控制组件 (悬浮球)
+ * Author: Ja4tin (ja4tin@hotmail.com)
+ * Date: 2026-02-04
+ * License: MIT
+ */
+
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Monitor } from "lucide-react";
@@ -18,7 +27,7 @@ export function ZoomControls({
   onScaleChange,
   onReset
 }: ZoomControlsProps) {
-  // Convert 0.1-2.0 to 10-200 for slider
+  // 转换 0.1-2.0 到 10-200 用于滑块
   const sliderValue = [Math.round(scale * 100)];
 
   const handleSliderChange = (vals: number[]) => {
@@ -32,7 +41,7 @@ export function ZoomControls({
         size="icon" 
         className={cn("h-6 w-6 text-slate-500 hover:text-primary", isAutoFit && "text-primary bg-primary/10")}
         onClick={onReset}
-        title={isAutoFit ? "Auto Fit Active" : "Reset to Auto Fit"}
+        title={isAutoFit ? "自适应已激活" : "重置为自适应"}
       >
         <Monitor className="h-4 w-4" />
       </Button>

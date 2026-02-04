@@ -1,3 +1,12 @@
+/**
+ * Project: EasyInvoice
+ * File: DragDropProvider.tsx
+ * Description: 全局拖拽上下文提供者 (dnd-kit)
+ * Author: Ja4tin (ja4tin@hotmail.com)
+ * Date: 2026-02-04
+ * License: MIT
+ */
+
 import { 
   DndContext, 
   type DragEndEvent, 
@@ -20,7 +29,7 @@ export function DragDropProvider({ children }: { children: React.ReactNode }) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
         activationConstraint: {
-            distance: 8, // Prevent accidental drags
+            distance: 8, // 防止误触拖拽
         },
     }),
     useSensor(KeyboardSensor, {
@@ -39,7 +48,7 @@ export function DragDropProvider({ children }: { children: React.ReactNode }) {
     if (!over) return;
     if (active.id === over.id) return;
 
-    // strip prefixes "sidebar-" or "canvas-"
+    // 移除前缀 "sidebar-" 或 "canvas-"
     const activeId = String(active.id).replace(/^(sidebar-|canvas-)/, '');
     const overId = String(over.id).replace(/^(sidebar-|canvas-)/, '');
 

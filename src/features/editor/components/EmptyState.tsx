@@ -1,3 +1,12 @@
+/**
+ * Project: EasyInvoice
+ * File: EmptyState.tsx
+ * Description: 空状态提示组件
+ * Author: Ja4tin (ja4tin@hotmail.com)
+ * Date: 2026-02-04
+ * License: MIT
+ */
+
 import { UploadCloud, FileType, Image as ImageIcon, FileText } from 'lucide-react';
 import { useSettingsStore } from '@/store/useSettingsStore';
 
@@ -12,7 +21,10 @@ export const EmptyState = () => {
         {/* 图标组合 */}
         <div className="relative flex justify-center">
           <div className="p-6 rounded-full bg-primary/5 ring-1 ring-primary/10 relative">
-            <UploadCloud className="h-12 w-12 text-primary/60 animate-bounce duration-[3s]" />
+            <UploadCloud 
+              className="h-12 w-12 text-primary/60 animate-bounce" 
+              style={{ animationDuration: '3s' }}
+            />
           </div>
           
           <div className="absolute -top-1 -right-1 p-2 rounded-full bg-white shadow-sm ring-1 ring-black/5 animate-in slide-in-from-bottom-2 duration-700 delay-300">

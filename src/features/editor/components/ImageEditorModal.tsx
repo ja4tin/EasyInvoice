@@ -1,3 +1,12 @@
+/**
+ * Project: EasyInvoice
+ * File: ImageEditorModal.tsx
+ * Description: 图片裁剪与旋转编辑器模态框
+ * Author: Ja4tin (ja4tin@hotmail.com)
+ * Date: 2026-02-04
+ * License: MIT
+ */
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useRef } from 'react';
@@ -17,29 +26,22 @@ export function ImageEditorModal({ isOpen, onClose, fileId }: ImageEditorModalPr
   const updateItemImage = useInvoiceStore((state) => state.updateItemImage);
   const cropperRef = useRef<ReactCropperElement>(null);
   
-  // Local state for rotation relative to the NEWLY LOADED image in cropper
-  // NOTE: When we save, we burn the rotation into the image. So when we reopen, 
-  // the image is already rotated, and initial rotation should be 0.
-  // The store's `rotation` is for CSS rotation on the canvas. 
-  // We want to apply the canvas rotation to the cropper initially if possible, 
-  // OR just let the user re-adjust. 
-  // Given the requirement "Reset rotation to 0 after save", implies that we consume the rotation.
-  
-  // However, cropperjs `rotateTo` is absolute. 
-  // Let's just provide manual rotation tools in the modal.
+  // 旋转逻辑说明:
+  // 当我们保存时，会将旋转“烘焙”到图片中。因此再次打开时，图片已经是旋转过的，初始旋转应为 0。
+  // Store 中的 `rotation` 是 CSS 旋转。
+  // 我们在模态框中提供手动旋转工具。
   
   const handleSave = () => {
     const cropper = cropperRef.current?.cropper;
     if (cropper) {
-      // Get cropped canvas
-      // We can specify min/max layout to avoid huge images
+      // 获取裁剪后的 canvas
       const canvas = cropper.getCroppedCanvas({
         maxWidth: 2000,
         maxHeight: 2000,
-        fillColor: '#fff', // Handle transparent areas if any (jpegs)
+        fillColor: '#fff', // 处理透明区域 (jpegs)
       });
       
-      const newBase64 = canvas.toDataURL('image/jpeg', 0.85); // Compress slightly
+      const newBase64 = canvas.toDataURL('image/jpeg', 0.85); // 轻微压缩
       
       updateItemImage(fileId, newBase64);
       onClose();
@@ -72,19 +74,15 @@ export function ImageEditorModal({ isOpen, onClose, fileId }: ImageEditorModalPr
                 ref={cropperRef}
                 src={fileItem.fileData}
                 style={{ height: '100%', width: '100%' }}
-                // Cropper.js options
-                initialAspectRatio={NaN} // Free aspect ratio
+                // Cropper.js 选项
+                initialAspectRatio={NaN} // 自由比例
                 guides={true}
-                viewMode={1} // Restrict crop box to canvas
-                dragMode="move" // Move image, not crop box by default (optional)
+                viewMode={1} // 限制裁剪框在画布内
+                dragMode="move" // 默认移动图片
                 toggleDragModeOnDblclick={false}
                 responsive={true}
-                checkOrientation={false} // Prevent auto-rotation based on exif
+                checkOrientation={false} // 阻止基于 exif 的自动旋转
                 autoCropArea={0.9}
-                // Initialize with current CSS rotation? 
-                // Using `rotateTo` in `ready` event is better if needed.
-                // For now, start fresh. Canvas rotation is separate for now 
-                // but will be reset to 0 upon save.
               />
         </div>
 

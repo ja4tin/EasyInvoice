@@ -277,68 +277,70 @@
 
 
 
+
+## 11. 工作区与数据模型 (Workspace & Data Model)
+
+### 11.1 双工作区架构 (Dual Workspace Architecture)
+应用维护两个独立的、持久化的工作区。切换模式意味着切换**活动数据视图**，而不仅仅是布局。
+
+*   **付款凭单工作区 (Payment Voucher Workspace)**
+    *   **方向**: 纵向 A4 (Portrait)。
+    *   **组件**: 顶部凭单头 (Voucher Header) + 网格项目。
+    *   **布局**: 2x2 网格 (田字格) 或自定义。
+*   **报销发票工作区 (Reimbursement Invoice Workspace)**
+    *   **方向**: 横向 A4 (Landscape)。
+    *   **组件**: 仅网格项目 (无凭单头)。
+    *   **布局**: 适配横向比例的 2x2 网格。
+
+### 11.2 文件归属与互斥性 (File Ownership & Mutuality)
+*   **关系**: 一个文件可以属于 `Payment` (凭单)、`Invoice` (发票) 或 `None` (未分配)。
+*   **互斥性**: 一个文件**不能**同时存在于两个工作区。
+*   **状态追踪**: 每个文件记录其归属 (`workspaceId`: `'payment' | 'invoice' | null`)。侧边栏中的标记指示当前归属。
+
+### 11.5 全局数据汇总 (Global Data Aggregation - CRITICAL)
+
+“付款凭单”组件（显示在付款工作区顶部）充当**全局汇总**角色。
+
+- **总金额**: 必须汇总应用中存储的**所有**文件的 `amount`，无论其 `workspaceId` 是 `'payment'` 还是 `'invoice'`。
+- **用途摘要**: 必须拼接**所有**文件的不同 `usage` 文本。
+- **理由**: 报销旨在索赔所有发票的金额。即使某张发票显示在“发票”页签（用于打印），其成本也必须包含在主付款凭单中。凭单代表总索赔额。
+
+### 11.3 交互设计 (Interaction Design)
+*   **侧边栏多选**:
+    *   文件带有选择复选框。
+    *   操作按钮（固定在底部）：“移入凭单” / “移入发票”。
+*   **上下文移动**:
+    *   画布上的项目有一个“移动”图标/按钮。
+    *   操作：立即将项目转移到*另一个*工作区，并从当前视图中移除。
+
+### 11.4 打印与导出 (Printing & Export)
+*   **动态方向**: PDF 生成 (`jspdf`) 必须遵从当前活动工作区的方向（凭单为纵向，发票为横向）。
+
 ## 10 实施计划 (Implementation Plan)
 
-- ### 第一阶段：核心架构
+### 第一阶段：核心架构
 
-  - [ ] 初始化 React + Vite + Tailwind + Zustand 项目。
-  - [ ] 搭建 `GridEngine` Hook：实现 4x6 网格算法、自动分页逻辑。
-  - [ ] 验证 `dnd-kit` 在网格布局中的拖拽效果（特别是“垂直堆叠”约束）。
-  - [ ] 封装 `usePersistStore`：集成 `idb-keyval` 实现自动持久化。
+- [ ] 初始化 React + Vite + Tailwind + Zustand 项目。
+- [ ] 搭建 `GridEngine` Hook：实现 4x6 网格算法、自动分页逻辑。
+- [ ] 验证 `dnd-kit` 在网格布局中的拖拽效果（特别是“垂直堆叠”约束）。
+- [ ] 封装 `usePersistStore`：集成 `idb-keyval` 实现自动持久化。
 
-  ### 第二阶段：UI 与交互
+### 第二阶段：UI 与交互
 
-  - [ ] 开发 Sidebar 文件上传组件与列表排序 (`SortableContext`)。
-  - [ ] 实现 List 与 Grid 的双向同步状态逻辑。
-  - [ ] 开发右侧属性面板，集成 `react-cropper` 实现图片编辑 Modal。
-  - [ ] 开发“付款凭单”组件：实现金额汇总 `useMemo` 计算和大写转换。
+- [ ] 开发 Sidebar 文件上传组件与列表排序 (`SortableContext`)。
+- [ ] 实现 List 与 Grid 的双向同步状态逻辑。
+- [ ] 开发右侧属性面板，集成 `react-cropper` 实现图片编辑 Modal。
+- [ ] 开发“付款凭单”组件：实现金额汇总 `useMemo` 计算和大写转换。
 
-  ## 4. Workspace & Data Model
+### 第三阶段：导出与优化
 
-### 4.1. Dual Workspace Architecture (Parallel Existence)
-The application maintains two distinct, persistent workspaces. Switching between modes switches the **active data view**, not just the layout.
+- [ ] 封装 `ExportButton` 组件：调用 `html2canvas` 抓取 `#print-area`。
+- [ ] 调试 300 DPI 导出效果，修复 Safari 下的 CSS 兼容性问题。
+- [ ] 引入 `decimal.js` 替换所有原生加减法。
+- [ ] 添加 Empty State (空状态) 和 Loading 骨架屏。
 
-*   **Payment Voucher Workspace (付款凭单)**
-    *   **Orientation**: Portrait A4 (Vertical).
-    *   **Components**: Top Voucher Header + Grid Items.
-    *   **Layout**: 2x2 Grid (Cross) or custom defined.
-*   **Reimbursement Invoice Workspace (报销发票)**
-    *   **Orientation**: Landscape A4 (Horizontal).
-    *   **Components**: Grid Items only (No Voucher Header).
-    *   **Layout**: 2x2 Grid (Cross) adapted for Landscape aspect ratio.
+### 第四阶段：测试与交付
 
-### 4.2. File Ownership & Mutuality
-*   **Relationship**: A file can belong to `Payment`, `Invoice`, or `None` (Unassigned).
-*   **Exclusivity**: A file **cannot** be in both workspaces simultaneously.
-*   **State Tracking**: Each file item records its assignment (`workspaceId`: `'payment' | 'invoice' | null`). A marker in the sidebar indicates current ownership.
-
-### 4.5 Global Data Aggregation (CRITICAL)
-
-The "Payment Voucher" component (displayed at the top of the Payment Workspace) acts as the **Global Summary**.
-
-- **Total Amount**: MUST sum the `amount` of **ALL** files stored in the application, regardless of whether their `workspaceId` is `'payment'` or `'invoice'`.
-- **Usage Summary**: MUST concatenate distinct `usage` text from **ALL** files.
-- **Rationale**: Reimbursement aims to claim money for ALL invoices. Even if an invoice is displayed on the "Invoice" sheet (for printing), its cost must be included in the main Payment Voucher. The voucher represents the total claim.
-
-### 4.3. Interaction Design
-*   **Sidebar Multi-Select**:
-    *   Files have checkboxes for selection.
-    *   Action Buttons (Fixed at bottom): "Add to Payment" / "Add to Invoice".
-*   **Contextual Move**:
-    *   Items on the Canvas have a "Move" icon/button.
-    *   Action: Instantly transfers the item to the *other* workspace and removes it from the current view.
-
-### 4.4. Printing & Export
-*   **Dynamic Orientation**: PDF generation (`jspdf`) must respect the active workspace's orientation (Portrait for Payment, Landscape for Invoice).
-  ### 第三阶段：导出与优化
-
-  - [ ] 封装 `ExportButton` 组件：调用 `html2canvas` 抓取 `#print-area`。
-  - [ ] 调试 300 DPI 导出效果，修复 Safari 下的 CSS 兼容性问题。
-  - [ ] 引入 `decimal.js` 替换所有原生加减法。
-  - [ ] 添加 Empty State (空状态) 和 Loading 骨架屏。
-
-  ### 第四阶段：测试与交付
-
-  - [ ] 性能测试（React Profiler 检测 50+ 组件渲染性能）。
-  - [ ] 边界测试（超长文本截断、断电恢复）。
-  - [ ] 最终验收。
+- [ ] 性能测试（React Profiler 检测 50+ 组件渲染性能）。
+- [ ] 边界测试（超长文本截断、断电恢复）。
+- [ ] 最终验收。

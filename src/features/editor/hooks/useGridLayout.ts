@@ -1,5 +1,13 @@
+/**
+ * Project: EasyInvoice
+ * File: useGridLayout.ts
+ * Description: 计算发票网格布局 Hook
+ * Author: Ja4tin (ja4tin@hotmail.com)
+ * Date: 2026-02-04
+ * License: MIT
+ */
+
 import { useMemo } from 'react';
-// import { useInvoiceStore } from '@/store/useInvoiceStore';
 import { calculateLayout, type LayoutPosition } from '../utils/grid-layout';
 
 import { type InvoiceItem, type AppMode, type InvoiceLayout } from '@/types';

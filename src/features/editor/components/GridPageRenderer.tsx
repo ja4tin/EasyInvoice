@@ -1,10 +1,19 @@
+/**
+ * Project: EasyInvoice
+ * File: GridPageRenderer.tsx
+ * Description: 单个 A4 页面渲染器，处理网格线、凭单和项目定位
+ * Author: Ja4tin (ja4tin@hotmail.com)
+ * Date: 2026-02-04
+ * License: MIT
+ */
+
 import React from 'react';
 import { cn } from "@/lib/utils";
 import { FileItem } from "@/features/editor/components/FileItem";
 import { Voucher } from "@/features/voucher/components/Voucher";
 import type { InvoiceItem } from '@/types';
 
-// Simple wrapper for print view (no drag/drop)
+// 简单的打印视图包装器 (无拖拽)
 function StaticGridItem({ 
   item, 
   className,
@@ -17,15 +26,13 @@ function StaticGridItem({
       <FileItem 
          data={item} 
          className="w-full h-full"
-         // No interactions for print
+         // 打印时无交互
          dragHandleProps={{}}
          onUpdate={() => {}}
          onDelete={() => {}}
          onMove={() => {}}
          moveActionLabel=""
          isSelected={false}
-         // Maybe add readOnly prop to FileItem if needed (it renders actions only on hover/select)
-         // Since isSelected is false, actions won't show.
       />
     </div>
   );
@@ -37,9 +44,9 @@ interface GridPageRendererProps {
     appMode: 'payment' | 'invoice';
     invoiceLayout?: 'cross' | 'vertical';
     showVoucher?: boolean;
-    scale?: number; // Optional scaling
-    children?: React.ReactNode; // For SortableGridItem injection (if used in main canvas)
-    renderItem?: (item: InvoiceItem) => React.ReactNode; // Custom item renderer
+    scale?: number; // 可选缩放
+    children?: React.ReactNode; 
+    renderItem?: (item: InvoiceItem) => React.ReactNode; // 自定义项目渲染器
 }
 
 export const GridPageRenderer = ({
@@ -66,12 +73,12 @@ export const GridPageRenderer = ({
             // data-orientation used by PDF export
             data-orientation={isLandscape ? 'l' : 'p'}
         >
-             {/* Inner Container for Padding/Grid alignment */}
+             {/* 内部容器用于 Padding/网格对齐 */}
              <div className="relative w-full h-full">
-                {/* Grid Overlay for Visual Guide (Hidden in Print) */}
+                {/* 视觉引导网格线 (打印时隐藏) */}
                 <div className="absolute inset-0 grid grid-cols-4 grid-rows-6 pointer-events-none z-10 pdf-export-hidden">
                 {Array.from({ length: 24 }).map((_, i) => {
-                  // If voucher is visible on page 0, hide the grid lines for the first 2 rows (indexes 0-7)
+                  // 如果 Page 0 显示凭单，隐藏前2行的网格线(索引 0-7)
                   const isHiddenByVoucher = pageIndex === 0 && showVoucher && i < 8;
                   return (
                     <div 
@@ -85,9 +92,9 @@ export const GridPageRenderer = ({
                 })}
              </div>
 
-             {/* Content Layer */}
+             {/* 内容层 */}
              <div className="relative z-20 w-full h-full p-0">
-               {/* Voucher - Only on Page 0 */}
+               {/* 凭单 - 仅在 Page 0 */}
                {pageIndex === 0 && showVoucher && (
                  <div 
                    className="absolute top-0 left-0 w-full h-[33.33%] pointer-events-auto p-[5mm]"
@@ -122,9 +129,9 @@ export const GridPageRenderer = ({
                })}
              </div>
 
-             {/* Page Number */}
+             {/* 页码 */}
              <div className="absolute bottom-2 right-4 text-xs text-muted-foreground print:hidden pdf-export-hidden">
-               Page {pageIndex + 1}
+               第 {pageIndex + 1} 页
              </div>
            </div>
         </div>

@@ -1,3 +1,12 @@
+/**
+ * Project: EasyInvoice
+ * File: UploadedFileList.tsx
+ * Description: 左侧文件列表组件，显示已上传但未处理的文件，支持批量操作
+ * Author: Ja4tin (ja4tin@hotmail.com)
+ * Date: 2026-02-04
+ * License: MIT
+ */
+
 import { useState, useEffect } from 'react';
 import {
   SortableContext,
@@ -8,6 +17,7 @@ import { useSettingsStore } from '@/store/useSettingsStore';
 import { SortableItem } from '@/components/ui/SortableItem';
 
 import { cn } from '@/lib/utils';
+import { X, ArrowRight } from 'lucide-react';
 
 export function UploadedFileList() {
   const items = useInvoiceStore((state) => state.items)
@@ -17,7 +27,7 @@ export function UploadedFileList() {
 
   const [selectedFileIds, setSelectedFileIds] = useState<Set<string>>(new Set());
 
-  // Prune selections when items change (optional, but good for cleanup)
+  // 当 items 变化时清理选中状态
   useEffect(() => {
     setSelectedFileIds(prev => {
       const next = new Set<string>();
@@ -42,7 +52,7 @@ export function UploadedFileList() {
     selectedFileIds.forEach(id => {
       setWorkspace(id, target);
     });
-    setSelectedFileIds(new Set()); // Clear after action
+    setSelectedFileIds(new Set()); // 操作后清除选中
   };
 
   return (
@@ -64,9 +74,9 @@ export function UploadedFileList() {
                       isInCurrentWorkspace ? "bg-background/50 hover:bg-background" : "bg-slate-100 opacity-75",
                       isSelected && "border-blue-400 bg-blue-50/50"
                     )}
-                    onClick={() => toggleSelection(item.id)} // Allow selecting by clicking row? or just checkbox? Let's assume Checkbox only + maybe row
+                    onClick={() => toggleSelection(item.id)}
                   >
-                    {/* Checkbox */}
+                    {/* 复选框 */}
                     <div className="flex items-center justify-center p-1" onPointerDown={(e) => e.stopPropagation()}>
                         <input 
                             type="checkbox" 
@@ -80,7 +90,7 @@ export function UploadedFileList() {
                     <div className="h-12 w-12 flex-shrink-0 bg-white rounded border flex items-center justify-center overflow-hidden relative">
                         <img src={item.fileData} alt={item.name} className="max-h-full max-w-full object-contain pointer-events-none" />
                         
-                        {/* Show ADD button if unassigned (and not selected?) */}
+                        {/* 快捷添加到当前工作区按钮 (如果未分配且未选中) */}
                         {!isAssigned && !isSelected && (
                           <div className="absolute inset-0 bg-white/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                              <button 
@@ -90,16 +100,16 @@ export function UploadedFileList() {
                                }}
                                onPointerDown={(e) => e.stopPropagation()}
                                className="text-green-600 hover:scale-110 transition-transform"
-                               title={`Add to ${appMode === 'payment' ? 'Payment' : 'Invoice'}`}
+                               title={`添加到 ${appMode === 'payment' ? '付款凭单' : '发票页'}`}
                              >
                                 <div className="bg-white rounded-full p-0.5 shadow-sm border border-green-200">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+                                  <ArrowRight size={14} className="stroke-[3px]" />
                                 </div>
                              </button>
                           </div>
                         )}
                         
-                        {/* Workspace Badge (P/I) */}
+                        {/* 工作区角标 (付/票) */}
                         {isAssigned && (
                            <div className={cn(
                                "absolute top-0 right-0 text-[8px] px-1 rounded-bl font-bold",
@@ -114,7 +124,6 @@ export function UploadedFileList() {
                         <p className="truncate font-medium text-foreground">{item.name}</p>
                         <div className="flex items-center gap-2">
                            <p className="text-muted-foreground text-[10px]">{item.width}x{item.height}</p>
-                           {/* Status Text removed if we have badge? Keep for clarity if needed. Specs said badge. */}
                         </div>
                     </div>
                     
@@ -122,13 +131,12 @@ export function UploadedFileList() {
                         onClick={(e) => {
                             e.stopPropagation(); 
                             removeItem(item.id, true);
-                            // Cleanup is handled by useEffect
                         }}
                         className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive transition-opacity relative z-10"
-                        title="Permanently Delete"
+                        title="永久删除"
                         onPointerDown={(e) => e.stopPropagation()} 
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                        <X size={14} />
                     </button>
                   </div>
             </SortableItem>
@@ -140,7 +148,7 @@ export function UploadedFileList() {
          <p className="text-xs text-center text-muted-foreground py-4">暂无文件</p>
       )}
 
-      {/* Sticky Footer Action Bar */}
+      {/* 底部浮动操作栏 */}
       {selectedFileIds.size > 0 && (
          <div className="sticky bottom-0 left-0 right-0 bg-background/95 backdrop-blur border-t p-2 flex gap-2 shadow-lg animate-in slide-in-from-bottom-2 z-20">
             <button

@@ -1,3 +1,12 @@
+/**
+ * Project: EasyInvoice
+ * File: useExportPdf.ts
+ * Description: PDF 导出 Hook，使用 Clone Node + html2canvas 方案实现高清导出
+ * Author: Ja4tin (ja4tin@hotmail.com)
+ * Date: 2026-02-04
+ * License: MIT
+ */
+
 import { useCallback } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
@@ -10,22 +19,22 @@ export function useExportPdf() {
   const setIsExporting = useInvoiceStore(state => state.setIsExporting);
 
   const generatePdf = useCallback(async () => {
-    // Determine orientation based on appMode and invoiceLayout
-    // Payment -> Portrait (p)
+    // 根据 appMode 和 invoiceLayout 确定方向
+    // Payment -> 纵向 (p)
     // Invoice -> 
-    //   - Cross (2x2) -> Landscape (l)
-    //   - Vertical (1x2) -> Portrait (p)
+    //   - Cross (2x2) -> 横向 (l)
+    //   - Vertical (1x2) -> 纵向 (p)
     
     const filename = 'combined_export.pdf';
     
-    // Find all pages inside the print container
+    // 查找所有打印容器内的页面
     const printContainer = document.getElementById('print-container');
     if (!printContainer) {
         console.error("Print container not found");
         return null;
     }
 
-    // We select the children divs of .print-page-wrapper > .bg-white
+    // 选择 .print-page-wrapper 下的子 div
     const pages = printContainer.querySelectorAll('.print-page-wrapper > div');
 
     if (!pages || pages.length === 0) {
@@ -33,11 +42,11 @@ export function useExportPdf() {
       return null;
     }
 
-    // Initialize PDF (Orientation will be set per page)
+    // 初始化 PDF (方向将按页设置)
     const firstPage = pages[0] as HTMLElement;
     const firstOrientation = firstPage.getAttribute('data-orientation') || 'p';
     
-    // jsPDF instantiation
+    // jsPDF 实例
     const pdf = new jsPDF({
       orientation: firstOrientation as 'p' | 'l',
       unit: 'mm',
@@ -49,48 +58,48 @@ export function useExportPdf() {
         const originalPage = pages[i] as HTMLElement;
         const orientation = originalPage.getAttribute('data-orientation') || 'p';
 
-        // 1. Clone the page
+        // 1. 克隆页面
         const clonedPage = originalPage.cloneNode(true) as HTMLElement;
         
-        // 2. Prepare the clone for capture
-        // - Remove shadow
+        // 2. 准备克隆节点进行截图
+        // - 移除阴影
         clonedPage.style.boxShadow = 'none';
         clonedPage.style.margin = '0';
-        // - Position off-screen but visible
+        // - 定位到屏幕外但可见
         clonedPage.style.position = 'fixed';
         clonedPage.style.top = '-9999px';
         clonedPage.style.left = '-9999px';
-        clonedPage.style.zIndex = '5000'; // Make sure it's above hidden container? invalid z-index, but needs to be rendered.
-        // Actually, if it's in a hidden container (opacity 0), html2canvas might record it as transparent?
-        // Safe bet: append to document.body, make it visible there.
+        clonedPage.style.zIndex = '5000'; 
+        
+        // 确保可见性和不透明度
         clonedPage.style.opacity = '1'; 
         clonedPage.style.visibility = 'visible';
 
-        // - Ensure dimensions are locked (A4)
+        // - 确保尺寸锁定 (A4)
         const isLandscape = orientation === 'l';
         clonedPage.style.width = isLandscape ? '297mm' : '210mm';
         clonedPage.style.height = isLandscape ? '210mm' : '297mm';
         
-        // Hide elements marked for hiding (Grid lines, Page numbers)
+        // 隐藏不需要导出的元素 (如网格线、页码)
         const hiddenElements = clonedPage.querySelectorAll('.pdf-export-hidden');
         hiddenElements.forEach(el => {
            (el as HTMLElement).style.display = 'none';
         });
 
-        // Force white background for marked containers (Bugfix-502)
+        // 强制特定容器为白底 (Fix: 502)
         const whiteBgElements = clonedPage.querySelectorAll('.pdf-export-bg-white');
         whiteBgElements.forEach(el => {
            (el as HTMLElement).style.backgroundColor = '#ffffff';
         });
 
-        // Force remove borders for marked containers (Bugfix-503)
+        // 强制移除边框 (Fix: 503)
         const borderNoneElements = clonedPage.querySelectorAll('.pdf-export-border-none');
         borderNoneElements.forEach(el => {
            (el as HTMLElement).style.border = 'none';
            (el as HTMLElement).style.boxShadow = 'none';
         });
 
-        // Hide empty input containers (Amount & Usage)
+        // 隐藏空的输入框容器 (金额 & 用途)
         const inputContainers = clonedPage.querySelectorAll('.export-input-container');
         inputContainers.forEach(container => {
            const inputs = container.querySelectorAll('input');
@@ -107,10 +116,7 @@ export function useExportPdf() {
            }
         });
         
-        // 3. Process Inputs: Replace <input> with <div> text
-        // Query original from PrintContainer to get values? 
-        // Inputs in PrintContainer are fully rendered? Yes.
-        // But are they bound to values? Yes, they are React components in PrintContainer.
+        // 3. 处理输入框: 用 div 文本替换 <input> 以保证渲染一致性
         const originalInputs = originalPage.querySelectorAll('input, textarea');
         const clonedInputs = clonedPage.querySelectorAll('input, textarea');
         
@@ -118,23 +124,19 @@ export function useExportPdf() {
             const originalInput = originalInputs[j] as HTMLInputElement | HTMLTextAreaElement;
             const clonedInput = clonedInputs[j] as HTMLInputElement | HTMLTextAreaElement;
             
-            // Create a replacement div that looks like the input
+            // 创建替代 div
             const replacement = document.createElement('div');
             
-            // Copy computed styles to ensure it looks identical
-            // NOTE: originalInput is inside a hidden/opacity-0 container. COMPUTED STYLES MIGHT BE WEIRD?
-            // "visibility: hidden" elements have styles. "display: none" elements don't.
-            // PrintContainer is "opacity-0 pointer-events-none". It is visible in layout.
             const computedStyle = window.getComputedStyle(originalInput);
 
             replacement.style.fontFamily = computedStyle.fontFamily;
             replacement.style.fontSize = computedStyle.fontSize;
             replacement.style.fontWeight = computedStyle.fontWeight;
             replacement.style.textAlign = computedStyle.textAlign;
-            replacement.style.color = computedStyle.color; // Might be transparent if opacity inherited? No, opacity is on parent.
+            replacement.style.color = computedStyle.color;
             replacement.style.boxSizing = computedStyle.boxSizing;
             
-            // Critical: Copy exact dimensions and box model
+            // 关键: 复制精确尺寸和盒模型
             replacement.style.width = computedStyle.width;
             replacement.style.height = computedStyle.height;
             replacement.style.padding = computedStyle.padding;
@@ -144,16 +146,16 @@ export function useExportPdf() {
             replacement.style.backgroundColor = 'transparent'; 
             replacement.style.border = 'none'; 
             
-            // Use flex to ensure vertical alignment matches input behavior
+            // 使用 Flex 确保垂直对齐一致
             replacement.style.display = 'flex';
             replacement.style.alignItems = 'center'; 
             
-            // Handle alignment based on text-align
+            // 处理水平对齐
             if (computedStyle.textAlign === 'center') replacement.style.justifyContent = 'center';
             else if (computedStyle.textAlign === 'right') replacement.style.justifyContent = 'flex-end';
             else replacement.style.justifyContent = 'flex-start';
 
-            // Set text value
+            // 设置文本值
             const val = originalInput.value;
             replacement.textContent = val;
 
@@ -164,24 +166,22 @@ export function useExportPdf() {
             }
         }
 
-        // 4. Append clone to body (outside hidden container)
+        // 4. 追加克隆节点到 body (隐藏容器之外)
         document.body.appendChild(clonedPage);
         
         try {
-          // 5. Capture
+          // 5. 执行截图
           const canvas = await html2canvas(clonedPage, {
             scale: 2, 
             useCORS: true,
             logging: false,
             backgroundColor: '#ffffff',
-            // Increase timeout for loading?
             onclone: () => {
-                // Ensure opacity is reset if it leaked
-                // (Done via style above)
+                // 确保样式应用
             }
           });
           
-          const imgData = canvas.toDataURL('image/jpeg', 1.0); // Max quality
+          const imgData = canvas.toDataURL('image/jpeg', 1.0); // 最高质量
           
           const pdfWidth = isLandscape ? 297 : 210;
           const pdfHeight = isLandscape ? 210 : 297;
@@ -195,7 +195,7 @@ export function useExportPdf() {
         } catch (err) {
           console.error("Error generating PDF page", i, err);
         } finally {
-          // 6. Cleanup
+          // 6. 清理
           document.body.removeChild(clonedPage);
         }
     }

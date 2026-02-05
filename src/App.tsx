@@ -15,6 +15,7 @@ import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
 import { useZoom } from "@/features/editor/hooks/useZoom";
 import { ZoomControls } from "@/features/editor/components/ZoomControls";
 import { useSettingsStore } from "@/store/useSettingsStore";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 function App() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -79,6 +80,7 @@ function App() {
         </div>
         <LoadingOverlay />
       </Layout>
+      <SpeedInsights />
     </DragDropProvider>
   );
 }

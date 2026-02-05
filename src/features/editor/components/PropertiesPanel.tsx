@@ -15,7 +15,13 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, RotateCw, RotateCcw, Crop } from 'lucide-react';
+import { ArrowLeft, RotateCw, RotateCcw, Crop, Info } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useGridLayout } from '@/features/editor/hooks/useGridLayout';
 import { useState } from 'react';
 import { ImageEditorModal } from './ImageEditorModal';
@@ -34,7 +40,7 @@ export const PropertiesPanel = () => {
     updateItem
   } = useInvoiceStore();
   
-  const { appMode, invoiceLayout } = useSettingsStore(state => state.settings);
+  const { appMode, invoiceLayout, showFileFields } = useSettingsStore(state => state.settings);
   const totalAmount = useInvoiceStore(state => state.getTotalAmount());
   
   // 图片编辑器模态框状态
@@ -172,6 +178,15 @@ export const PropertiesPanel = () => {
                      className="h-8"
                   />
                </div>
+
+               <div className="grid gap-1.5">
+                  <Label className="text-[10px] text-muted-foreground">备注</Label>
+                  <Input 
+                     value={selectedItem.remark || ''} 
+                     onChange={(e) => updateItem(selectedItem.id, { remark: e.target.value })}
+                     className="h-8"
+                  />
+               </div>
             </div>
 
           </div>
@@ -209,13 +224,31 @@ export const PropertiesPanel = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium">基本信息</h3>
-              <div className="flex items-center gap-2">
-                 <Label htmlFor="show-voucher" className="text-xs text-muted-foreground">显示表头</Label>
-                 <Switch 
-                   id="show-voucher"
-                   checked={!!isVoucherVisible}
-                   onCheckedChange={toggleVoucherVisibility}
-                 />
+              <div className="flex flex-col gap-2 items-end">
+                <div className="flex items-center gap-2">
+                   <Label htmlFor="show-voucher" className="text-xs text-muted-foreground">显示付款凭单</Label>
+                   <Switch 
+                     id="show-voucher"
+                     checked={!!isVoucherVisible}
+                     onCheckedChange={toggleVoucherVisibility}
+                   />
+                </div>
+                <div className="flex items-center gap-2">
+                   <Label htmlFor="show-file-fields" className="text-xs text-muted-foreground">文件下金额/用途/备注</Label>
+                   <Switch 
+                     id="show-file-fields"
+                     checked={showFileFields?.[appMode] ?? (appMode === 'payment')}
+                     onCheckedChange={(checked) => {
+                        const { updateSettings, settings } = useSettingsStore.getState();
+                        updateSettings({
+                            showFileFields: {
+                                ...(settings.showFileFields || { payment: true, invoice: false }),
+                                [appMode]: checked
+                            }
+                        });
+                     }}
+                   />
+                </div>
               </div>
             </div>
             
@@ -266,7 +299,19 @@ export const PropertiesPanel = () => {
                {/* 摘要 */}
                <div className="grid gap-1.5">
                   <div className="flex items-center justify-between">
-                    <Label className="text-xs">用途摘要</Label>
+                    <div className="flex items-center gap-1.5">
+                       <Label className="text-xs">用途摘要</Label>
+                       <TooltipProvider>
+                          <Tooltip delayDuration={300}>
+                             <TooltipTrigger asChild>
+                                <Info className="h-3 w-3 text-muted-foreground cursor-help" />
+                             </TooltipTrigger>
+                             <TooltipContent className="max-w-[220px]">
+                                <p className="text-xs">手动修改凭单内的用途和金额后，文件下的金额和用途就不会显示在这里了，除非点击重置。</p>
+                             </TooltipContent>
+                          </Tooltip>
+                       </TooltipProvider>
+                    </div>
                     {voucherData.isSummaryDirty && (
                       <button
                         onClick={resetSummary}
@@ -289,7 +334,19 @@ export const PropertiesPanel = () => {
                {/* 总金额 */}
                <div className="grid gap-1.5">
                   <div className="flex items-center justify-between">
-                    <Label className="text-xs">总金额</Label>
+                    <div className="flex items-center gap-1.5">
+                       <Label className="text-xs">总金额</Label>
+                       <TooltipProvider>
+                          <Tooltip delayDuration={300}>
+                             <TooltipTrigger asChild>
+                                <Info className="h-3 w-3 text-muted-foreground cursor-help" />
+                             </TooltipTrigger>
+                             <TooltipContent className="max-w-[220px]">
+                                <p className="text-xs">手动修改凭单内的用途和金额后，文件下的金额和用途就不会显示在这里了，除非点击重置。</p>
+                             </TooltipContent>
+                          </Tooltip>
+                       </TooltipProvider>
+                    </div>
                     {voucherData.totalAmountOverride !== undefined && (
                       <button
                         onClick={() => updateVoucherData({ totalAmountOverride: undefined })}

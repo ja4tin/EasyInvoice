@@ -19,6 +19,10 @@ const DEFAULT_SETTINGS: AppSettings = {
   margin: 20, // 20mm
   appMode: 'payment',
   invoiceLayout: 'cross',
+  showFileFields: {
+    payment: true,
+    invoice: false,
+  },
 }
 
 export const useSettingsStore = create<SettingsState>()(

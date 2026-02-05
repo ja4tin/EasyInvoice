@@ -156,6 +156,11 @@ export const calculateLayout = (items: InvoiceItem[], options: LayoutOptions = {
     }
   });
 
+  // Fix: 如果显示凭单且没有生成页面（例如没有上传文件），强制生成第一页以显示凭单
+  if (pages.length === 0 && appMode === 'payment' && showVoucher) {
+      getPage(0);
+  }
+
   return {
     pages: results,
     totalPages: pages.length || 1,

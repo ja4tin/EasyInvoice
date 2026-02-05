@@ -44,6 +44,10 @@ export interface AppSettings {
   // 工作模式设置
   appMode: AppMode;
   invoiceLayout: InvoiceLayout;
+  showFileFields: {
+    payment: boolean;
+    invoice: boolean;
+  };
 }
 
 export interface VoucherData {

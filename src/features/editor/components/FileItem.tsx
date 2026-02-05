@@ -9,6 +9,7 @@
 
 import { type InvoiceItem } from "@/types";
 import { cn } from "@/lib/utils";
+import { useSettingsStore } from '@/store/useSettingsStore';
 import { RotateCw, Trash2, ArrowRightLeft } from "lucide-react";
 
 interface FileItemProps {
@@ -35,6 +36,8 @@ export function FileItem({
   dragHandleProps
 }: FileItemProps) {
   const { fileData, amount } = data;
+  const appMode = useSettingsStore(state => state.settings.appMode);
+  const showFields = useSettingsStore(state => state.settings.showFileFields?.[appMode] ?? (appMode === 'payment'));
 
   return (
     <div 
@@ -125,47 +128,50 @@ export function FileItem({
         )}
       </div>
 
-      {/* 输入区域 (紧凑 & 内联) */}
-      <div 
-        className="p-1 bg-white rounded-b-lg border-t border-slate-100 z-10 relative text-[10px] grid grid-cols-12 gap-1 export-input-container"
-        onPointerDown={(e) => e.stopPropagation()}
-        onKeyDown={(e) => e.stopPropagation()}
-      >
-        {/* 金额 */}
-        <div className="col-span-4 flex items-center gap-1 min-w-0">
-           <label className="font-semibold text-slate-400 whitespace-nowrap shrink-0 scale-90">金额</label>
-           <input 
-              type="number"
-              placeholder="0.00"
-              className="flex-1 w-0 font-mono font-bold bg-slate-50 border border-slate-200 rounded px-1 py-0.5 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none select-text text-blue-600"
-              value={amount || ''}
-              onChange={(e) => onUpdate?.({ amount: parseFloat(e.target.value) || 0 })}
-              onFocus={(e) => e.target.select()}
-           />
-        </div>
-        {/* 用途 */}
-        <div className="col-span-4 flex items-center gap-1 min-w-0">
-           <label className="font-semibold text-slate-400 whitespace-nowrap shrink-0 scale-90">用途</label>
-           <input 
-              type="text"
-              placeholder="摘要"
-              className="flex-1 w-0 bg-slate-50 border border-slate-200 rounded px-1 py-0.5 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none select-text"
-              value={data.usage || ''}
-              onChange={(e) => onUpdate?.({ usage: e.target.value })}
-           />
-        </div>
-        {/* 备注 */}
-        <div className="col-span-4 flex items-center gap-1 min-w-0">
-           <label className="font-semibold text-slate-400 whitespace-nowrap shrink-0 scale-90">备注</label>
-           <input 
-              type="text"
-              placeholder="备注"
-              className="flex-1 w-0 bg-slate-50 border border-slate-200 rounded px-1 py-0.5 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none select-text"
-              value={data.remark || ''}
-              onChange={(e) => onUpdate?.({ remark: e.target.value })}
-           />
-        </div>
-      </div>
+      {/* 输入区域 (紧凑 & 内联) - 根据全局设置显示/隐藏 */}
+      {/* 输入区域 (紧凑 & 内联) - 根据全局设置显示/隐藏 */}
+      {showFields && (
+          <div 
+            className="p-1 bg-white rounded-b-lg border-t border-slate-100 z-10 relative text-[10px] grid grid-cols-12 gap-1 export-input-container"
+            onPointerDown={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+          >
+            {/* 金额 */}
+            <div className="col-span-4 flex items-center gap-1 min-w-0">
+               <label className="font-semibold text-slate-500 whitespace-nowrap shrink-0 text-[10px] scale-90">金额</label>
+               <input 
+                  type="number"
+                  placeholder="0.00"
+                  className="flex-1 w-0 font-mono font-bold bg-slate-50 border border-slate-200 rounded px-1 py-0.5 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none select-text text-blue-600"
+                  value={amount || ''}
+                  onChange={(e) => onUpdate?.({ amount: parseFloat(e.target.value) || 0 })}
+                  onFocus={(e) => e.target.select()}
+               />
+            </div>
+            {/* 用途 */}
+            <div className="col-span-4 flex items-center gap-1 min-w-0">
+               <label className="font-semibold text-slate-500 whitespace-nowrap shrink-0 text-[10px] scale-90">用途</label>
+               <input 
+                  type="text"
+                  placeholder="摘要"
+                  className="flex-1 w-0 bg-slate-50 border border-slate-200 rounded px-1 py-0.5 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none select-text"
+                  value={data.usage || ''}
+                  onChange={(e) => onUpdate?.({ usage: e.target.value })}
+               />
+            </div>
+            {/* 备注 */}
+            <div className="col-span-4 flex items-center gap-1 min-w-0">
+               <label className="font-semibold text-slate-500 whitespace-nowrap shrink-0 text-[10px] scale-90">备注</label>
+               <input 
+                  type="text"
+                  placeholder="备注"
+                  className="flex-1 w-0 bg-slate-50 border border-slate-200 rounded px-1 py-0.5 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none select-text"
+                  value={data.remark || ''}
+                  onChange={(e) => onUpdate?.({ remark: e.target.value })}
+               />
+            </div>
+          </div>
+      )}
     </div>
   );
 }

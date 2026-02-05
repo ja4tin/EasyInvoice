@@ -15,7 +15,8 @@ EasyInvoice 是一个纯客户端、离线优先的 React 应用程序，旨在�
 - **FileItem**：单个发票/收据的卡片组件，包含图片预览和元数据输入（金额、类别、日期）。
 - **Voucher**：顶部的付款凭单组件，汇总信息。
 - **Sidebar (列表)**：数据的线性表示。
-- **PropertiesPanel**：选中项目的上下文感知操作。
+- **PropertiesPanel**：选中项目的上下文感知操作，包含全局显隐控制开关及带有 Tooltip 的信息提示。
+- **Tooltip**: 集成 `@radix-ui/react-tooltip`，提供交互式的上下文帮助信息。
 
 ### 2. 状态管理 (Zustand)
 

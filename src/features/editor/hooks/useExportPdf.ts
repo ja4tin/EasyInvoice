@@ -172,7 +172,7 @@ export function useExportPdf() {
         try {
           // 5. 执行截图
           const canvas = await html2canvas(clonedPage, {
-            scale: 2, 
+            scale: 3, 
             useCORS: true,
             logging: false,
             backgroundColor: '#ffffff',

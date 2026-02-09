@@ -1,2 +1,2 @@
 import './polyfills';
-import 'pdfjs-dist/build/pdf.worker.min.mjs';
+import 'pdfjs-dist/legacy/build/pdf.worker.min.mjs';

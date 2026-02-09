@@ -7,6 +7,7 @@ declare global {
       resolve: (value: T | PromiseLike<T>) => void;
       reject: (reason?: unknown) => void;
     };
+    try<T>(callback: () => T | PromiseLike<T>): Promise<T>;
   }
 }
 
@@ -20,5 +21,17 @@ if (!Promise.withResolvers) {
       reject = rej;
     });
     return { promise, resolve, reject };
+  };
+}
+
+if (!Promise.try) {
+  Promise.try = function <T>(callback: () => T | PromiseLike<T>): Promise<T> {
+    return new Promise((resolve, reject) => {
+      try {
+        resolve(callback());
+      } catch (e) {
+        reject(e);
+      }
+    });
   };
 }

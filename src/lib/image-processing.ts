@@ -11,7 +11,7 @@ import * as pdfjsLib from "pdfjs-dist";
 
 // 显式设置 worker 路径，适配 Vite 构建环境
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
+  "../pdf.worker.ts",
   import.meta.url,
 ).toString();
 

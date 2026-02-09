@@ -7,7 +7,7 @@
  * License: MIT
  */
 
-import * as pdfjsLib from "pdfjs-dist";
+import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 import PdfWorkerUrl from '../pdf.worker?worker&url';
 
 // 显式设置 worker 路径，适配 Vite 构建环境

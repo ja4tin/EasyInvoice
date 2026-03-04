@@ -195,6 +195,7 @@ export const useInvoiceStore = create<InvoiceState>()(
             ...state.voucherData,
             summary: '',
             voucherNo: generateVoucherNo(),
+            date: new Date().toISOString().split('T')[0], // 重置日期为当日
             isSummaryDirty: false
           }
         }));
@@ -264,6 +265,7 @@ export const useInvoiceStore = create<InvoiceState>()(
       name: 'easyinvoice-storage',
       storage: createJSONStorage(() => idbStorage),
       version: 3,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       migrate: (persistedState: any, version) => {
         let state = persistedState;
         
@@ -271,6 +273,7 @@ export const useInvoiceStore = create<InvoiceState>()(
           // 迁移 v0 -> v1
           state = {
             ...state,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             items: state.items.map((item: any) => ({
               ...item,
               workspaceId: (item.isOnCanvas === false) ? null : 'payment',

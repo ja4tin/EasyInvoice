@@ -21,7 +21,7 @@ interface FileItemProps {
   onUpdate?: (updates: Partial<InvoiceItem>) => void;
   onMove?: () => void; // 移动工作区
   moveActionLabel?: string; // 提示文本
-  dragHandleProps?: Record<string, any>; // dnd-kit 属性
+  dragHandleProps?: Record<string, unknown>; // dnd-kit 属性
 }
 
 export function FileItem({ 
@@ -36,8 +36,10 @@ export function FileItem({
   dragHandleProps
 }: FileItemProps) {
   const { fileData, amount } = data;
-  const appMode = useSettingsStore(state => state.settings.appMode);
-  const showFields = useSettingsStore(state => state.settings.showFileFields?.[appMode] ?? (appMode === 'payment'));
+  const globalAppMode = useSettingsStore(state => state.settings.appMode);
+  const currentMode = data.workspaceId || globalAppMode;
+  const showFileFields = useSettingsStore(state => state.settings.showFileFields);
+  const showFields = showFileFields?.[currentMode] ?? (currentMode === 'payment');
 
   return (
     <div 

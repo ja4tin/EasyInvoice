@@ -274,6 +274,16 @@
     - 修复了在无上传文件时，即使开启了"付款凭单"也无法导出/打印凭单的问题。
     - 优化了 `grid-layout.ts` 算法，确保在 `payment` 模式下且需显示凭单时，强制生成首个空页面。
 
+- **[2026-02-09] PDF 兼容性修复 (Legacy Support)**
+    - **问题**: 旧版浏览器 (如 Edge 109) 无法上传 PDF，报错 `Promise.withResolvers` 和 `docId` undefined。
+    - **原因**: `pdfjs-dist` v5+ 使用了 ES2024 新特性，且 Standard Build 不兼容旧环境。主线程和 Worker 线程均受影响。
+    - **解决方案**:
+        - **Polyfills**: 手动实现了 `Promise.withResolvers` 和 `Promise.try` 补丁 (`src/polyfills.ts`)。
+        - **Custom Worker**: 创建了自定义 Worker 入口 (`src/pdf.worker.ts`)，在加载 pdfjs 之前优先加载 Polyfills。
+        - **Legacy Build**: 将主线程 (`image-processing.ts`) 和 Worker 的引入源全量切换为 `pdfjs-dist/legacy/build/pdf.mjs`。
+        - **Vite 配置**: 使用 `?worker&url` 显式引入自定义 Worker，解决 MIME 类型和打包路径问题。
+    - **验证**: 通过了构建检查，理论上兼容所有支持 ES5/ES6 的浏览器。
+
 - **[2026-02-05] UI 交互与细节优化**
     - **字体统一**: 将文件输入框上的 `金额`、`用途`、`备注`标签统一为 `text-slate-500 font-semibold text-[10px]`（字体参数：Font-size: 10px, Weight: 600, Color: Slate-500）。
     - **功能补全**: 在右侧属性面板中为选中文件添加了缺失的 `备注` 输入框。

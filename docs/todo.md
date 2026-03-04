@@ -123,6 +123,7 @@
             - [x] 304.2: 实现 `processPdf` 工具函数（PDF Page -> Canvas -> Base64）.
             - [x] 304.3: 更新 `UploadZone` 支持 `.pdf` 并调用新的处理逻辑.
             - [x] 304.4: **验证**: 上传多页 PDF，列表应展示多个对应的图片 Item.
+            - [x] 304.5: **兼容性修复**: 针对旧版浏览器 (Edge 109) 实施 Legacy Build 和 Polyfills (Worker & Main)。
 
 - [x] **Task-305: 发票模式与分流逻辑 (Invoice Mode & Routing)**
     - **Status**: *Replaced by Phase 3.5 Detailed Tasks*
@@ -299,3 +300,51 @@
         - [x] 501.1: 运行 `npm run build`，检查是否有 TypeScript 错误。
         - [x] 501.2: 检查构建产物 (`dist/`) 大小。
         - [x] 501.3: 部署到 Vercel/Netlify 进行最终环境测试。
+
+---
+
+## 第六阶段：V1.1 实用功能拓展 (Phase 6: V1.1 Utility Features)
+
+本阶段核心目标：实现产品经理建议的“降本增效”高价值功能，包括电子档打包下载 (ZIP) 与跨端传图 (PeerJS WebRTC)。遵循敏捷小步迭代与测试。
+
+- [ ] **Task-800: "导出归档包" 基础链路 (ZIP Export Core)**
+    - **上下文**: 利用 JSZip 将发票原图和渲染的 PDF 合并打包，并规范文件命名 (`序号_用途_金额.jpg`)。
+    - **子任务**:
+        - [ ] 800.1: 安装 `jszip` 与 `file-saver` 依赖。
+        - [ ] 800.2: 新建 `src/features/editor/hooks/useExportZip.ts`，并重用/抽离原来生成 PDF 的业务流。
+        - [ ] 800.3: 实现数据组装：收集当前画布中的图片，提取金额与用途生成标准文件名。
+        - [ ] 800.4: 使用 JSZip 异步压缩图片资源与 PDF 实例，最后转化为 Blob。
+        - [ ] 800.5: **测试验证**: 编写工具函数单元测试，确保规范化文件名的正确拼装，并处理空值。
+
+- [ ] **Task-801: ZIP 导出 UI 集成 (ZIP Export UI)**
+    - **上下文**: 将打包功能加入右侧操作面板或顶部工具栏。
+    - **子任务**:
+        - [ ] 801.1: 在 Header 的导出按钮旁新增“📦 下载 ZIP 归档”按钮。
+        - [ ] 801.2: 绑定进度提示与 Loading 状态，防止重复点击。
+        - [ ] 801.3: **测试验证**: 界面上添加 2 张图片填写数据后点击下载，解压 ZIP 检查包含 1 个 PDF 和 2 张按要求命名的图片。
+
+- [ ] **Task-802: 手机传图底层通信层 (P2P Signaling)**
+    - **上下文**: 使用 PeerJS 实现无后端的浏览器点对点通信（WebRTC）。
+    - **子任务**:
+        - [ ] 802.1: 安装依赖 `peerjs` 与 `qrcode.react`。
+        - [ ] 802.2: 封装 `src/lib/peerClient.ts`，实现 Peer 实例的初始化、连接与错误重试逻辑。
+        - [ ] 802.3: 创建 Context 或 Zustand Store (`usePeerStore`) 管理 Peer 连接状态与唯一的 PeerID。
+        - [ ] 802.4: **测试验证**: 启动本地环境并在双开无痕窗口中模拟对等连接逻辑，验证能正常握手及发送 String Msg。
+
+- [ ] **Task-803: 电脑端传图助手 UI (Desktop QR Code Component)**
+    - **上下文**: 在 Sidebar 展示供手机扫码的二维码与传图状态面板。
+    - **子任务**:
+        - [ ] 803.1: 在全局 Layout 左侧下方添加“📱 手机传图助手”常驻入口按钮。
+        - [ ] 803.2: 点击后弹出 Modal，生成带有特定路由 (`/mobile-upload?peerId=xxx`) 的全屏/清晰 QR Code。
+        - [ ] 803.3: 监听 `PeerStore` 连接状态，扫码成功后 Modal 状态变为“🟢 已连接：等待发送图片”。
+        - [ ] 803.4: 监听收到数据的回调，立刻调用 `useInvoiceStore.addItem` 添加新图片到列表。
+
+- [ ] **Task-804: 手机端极简网页 (Mobile Client View)**
+    - **上下文**: 为扫码后在手机端呈现特殊的路由页面，提供调用相机或相册的功能。
+    - **子任务**:
+        - [ ] 804.1: 配置 Vite/React-Router 设置一个新的路由页面 `/mobile-upload`。
+        - [ ] 804.2: 在该页面解析 URL 参数获取 Target PeerID，主动建立 PeerJS 强连接。
+        - [ ] 804.3: 页面实现原生的 `<input type="file" accept="image/*" capture="environment" />`。
+        - [ ] 804.4: 图片选择后调用本地前端压缩（限制短边或 MaxWidth），然后作为 Blob/ArrayBuffer 通过 WebRTC 发送。
+        - [ ] 804.5: 提供手机端进度条与“🎉 发送成功”的轻量 Toast。
+        - [ ] 804.6: **综合测试验证**: 将本地计算机暴露内网 IP (host mode)，用手机扫码并拍摄一张照片，照片成功瞬间出现在电脑左侧侧边栏。

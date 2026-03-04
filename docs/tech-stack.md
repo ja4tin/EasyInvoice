@@ -29,10 +29,12 @@
 | 模块 | 选型 | 理由 |
 | :--- | :--- | :--- |
 | **本地存储** | **idb-keyval** | 极简的 Promise 封装库 (IndexedDB)。突破 LocalStorage 5MB 限制，轻松存储几十张 Base64 图片。 |
-| **PDF 生成** | **html2canvas** + **jspdf** | **关键选型**。采用“高清快照”策略，确保所见即所得，避免中文字体文件过大问题。 |
+| **页面导出** | **html2canvas** + **jspdf** | **关键选型**。采用“高清快照”策略，确保所见即所得，避免中文字体文件过大问题。 |
+| **文件打包** | **jszip** + **file-saver** | **V1.1新增**。在纯前端内存中直接聚合生成ZIP归档文件并触发下载，完全避开后端组件。 |
 | **数学计算** | **decimal.js** | **财务红线**。彻底解决 JS 浮点数运算误差 (0.1+0.2!=0.3)，保证金额分毫不差。 |
 | **图片裁剪** | **react-cropper** | 成熟的 Cropper.js 封装，用于模态框内的图片编辑。 |
 | **日期处理** | **dayjs** | 轻量级 (2KB) 的 Moment.js 替代品。 |
+| **跨端互联** | **peerjs** + **qrcode.react** | **V1.1新增**。基于WebRTC封装，用于提供手机扫码到电脑管线的极致通信传图能力。 |
 
 ### 1.4 后端与数据库 (Backend & Database)
 * **后端**: **无 (None)**。本项目为纯静态应用，不需要服务器端逻辑。
@@ -58,9 +60,12 @@ src/
 │   │   │   └── Sidebar.tsx       # 左侧文件列表
 │   │   ├── hooks/
 │   │   │   ├── useGridLayout.ts  # 4x6 网格计算核心逻辑
-│   │   │   └── useExportPdf.ts   # 导出 PDF 逻辑
+│   │   │   ├── useExportPdf.ts   # 导出 PDF 逻辑
+│   │   │   └── useExportZip.ts   # 导出 ZIP 归档逻辑 (V1.1)
 │   │   └── utils/
 │   │       └── layout-algorithms.ts # 垂直堆叠与分页算法
+│   ├── mobile/         # 手机传图模块 (V1.1)
+│   │   └── MobileUpload.tsx # 移动端专属扫码上传流
 │   └── voucher/        # 付款凭单模块
 │       ├── components/
 │       │   └── PaymentVoucher.tsx
@@ -68,9 +73,11 @@ src/
 │           └── currency-format.ts # 人民币大写转换
 ├── store/              # 全局状态 (Zustand)
 │   ├── useFileStore.ts # 核心：管理 files[], addFile, moveFile
-│   └── useAppStore.ts  # UI 状态 (loading, modal open)
+│   ├── useAppStore.ts  # UI 状态 (loading, modal open)
+│   └── usePeerStore.ts # WebRTC 状态 (V1.1: 连接, ID 管理)
 ├── lib/                # 第三方库配置
 │   ├── db.ts           # IndexedDB 封装单例
+│   ├── peerClient.ts   # PeerJS 实例单例 (V1.1)
 │   └── utils.ts        # Tailwind merge 等工具
 ├── types/              # TypeScript 类型定义
 └── App.tsx
@@ -160,6 +167,14 @@ export interface ProjectState {
 - **方案**：
   - **上传时压缩**：在文件上传瞬间，利用 Canvas 将图片 `max-width` 限制为 1500px，转为 JPEG (quality 0.8)。
   - 这可以将 10MB 的照片压缩到 300KB 左右，极大提升加载速度和 PDF 生成速度。
+
+### 4.5 P2P 跨端传输架构 (P2P Client Architecture)
+
+- **挑战**：在无法提供服务器甚至公网 IP 的纯静态部署应用 (Vercel/Github Pages) 内实现桌面端与移动端双向通信。
+- **方案**：
+  - 采用 **WebRTC (PeerJS)** 提供 NAT 打洞服务 (利用公共 STUN 免费信令)。
+  - PC 端启动时生成唯一 ID，并通过 `qrcode.react` 暴露为含短链接信息的二维码供移动设备直接扫描。
+  - 扫描后在手机页上调用摄像头读取，本地前端级压缩后转换为 Blob 发往 WebRTC DataChannel 队列，电脑端直接写入 IndexedDB。
 
 ------
 

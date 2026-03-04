@@ -18,7 +18,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   paperSize: 'a4',
   margin: 20, // 20mm
   appMode: 'payment',
-  invoiceLayout: 'cross',
+  invoiceLayout: 'vertical',
   showFileFields: {
     payment: true,
     invoice: false,

@@ -12,9 +12,12 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
+import { MobileUpload } from '@/features/mobile/MobileUpload'
+
+const isMobileUpload = window.location.pathname === '/mobile-upload';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    {isMobileUpload ? <MobileUpload /> : <App />}
   </StrictMode>,
 )

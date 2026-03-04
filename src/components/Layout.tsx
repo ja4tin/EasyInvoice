@@ -10,17 +10,19 @@
 import React, { useState } from 'react';
 import GradientText from '@/components/ui/GradientText';
 import { useExportPdf } from '@/features/editor/hooks/useExportPdf';
+import { useExportZip } from '@/features/editor/hooks/useExportZip';
 import { PdfPreviewModal } from '@/features/export/components/PdfPreviewModal';
-import { Download } from 'lucide-react';
+import { Download, Archive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { UploadZone } from '@/features/upload/components/UploadZone'
 import { UploadedFileList } from '@/features/upload/components/UploadedFileList'
 import { PropertiesPanel } from '@/features/editor/components/PropertiesPanel'
 import { PrintContainer } from '@/features/editor/components/PrintContainer'
+import { QRCodeModal } from '@/components/QRCodeModal'
 import { useSettingsStore } from '@/store/useSettingsStore'
 import { useInvoiceStore } from '@/store/useInvoiceStore'
 import { usePrint } from '@/features/editor/hooks/usePrint'
-import { Trash2, Printer, PanelLeftClose, PanelLeftOpen, Github } from 'lucide-react'
+import { Trash2, Printer, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Github, Smartphone } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   AlertDialog,
@@ -45,6 +47,7 @@ export const Layout = ({ children }: LayoutProps) => {
   const { appMode, invoiceLayout } = useSettingsStore(state => state.settings);
   const updateSettings = useSettingsStore(state => state.updateSettings);
   const { generatePdfUrl } = useExportPdf();
+  const { exportZip } = useExportZip();
   const { print } = usePrint();
   const items = useInvoiceStore(state => state.items);
 
@@ -63,8 +66,14 @@ export const Layout = ({ children }: LayoutProps) => {
   const [pdfFilename, setPdfFilename] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
   
+  // 传图 Modal 状态
+  const [isMobileUploadOpen, setIsMobileUploadOpen] = useState(false);
+
   // 左侧边栏状态
   const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
+
+  // 右侧边栏状态
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(true);
 
   const handleExportClick = async () => {
     setIsPreviewOpen(true);
@@ -149,9 +158,10 @@ export const Layout = ({ children }: LayoutProps) => {
                   {appMode === 'invoice' && (
                      <div className="flex items-center gap-2 border-l pl-4 ml-2">
                         <span className="text-sm text-muted-foreground">布局:</span>
-                        <select 
+                         <select 
                           className="h-8 text-sm bg-transparent border rounded px-2"
                           value={invoiceLayout}
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
                           onChange={(e) => updateSettings({ invoiceLayout: e.target.value as any })}
                         >
                             <option value="cross">田字格 (2x2)</option>
@@ -199,14 +209,32 @@ export const Layout = ({ children }: LayoutProps) => {
 
                  <Button variant="outline" size="sm" onClick={handleExportClick}>
                     <Download className="w-4 h-4 mr-2" />
-                    导出 PDF
+                    预览 PDF
+                 </Button>
+
+                 <Button variant="default" size="sm" onClick={exportZip}>
+                    <Archive className="w-4 h-4 mr-2" />
+                    导出归档 (ZIP)
                  </Button>
               </div>
           </div>
 
-          {/* 右侧区域 (GitHub Link) - 固定宽度 (280px) 与右侧边栏对齐 */}
-          <div className="flex items-center gap-2 w-[280px] border-l border-border shrink-0 h-full px-6 justify-end">
-             <Button variant="ghost" size="icon" asChild>
+          {/* 右侧区域 (GitHub Link) - 与右侧边栏对齐 */}
+          <div className={cn(
+             "flex items-center gap-2 border-l border-border shrink-0 h-full px-4 transition-all duration-300 ease-in-out",
+             isRightSidebarOpen ? "w-[280px] justify-between" : "w-[60px] justify-center"
+          )}>
+             <Button 
+                variant="ghost" 
+                size="icon" 
+                className="text-muted-foreground hover:text-foreground shrink-0"
+                onClick={() => setIsRightSidebarOpen(!isRightSidebarOpen)} 
+                title={isRightSidebarOpen ? "收起右侧属性版" : "展开右侧属性版"}
+             >
+                 {isRightSidebarOpen ? <PanelRightClose className="w-5 h-5" /> : <PanelRightOpen className="w-5 h-5" />}
+             </Button>
+             
+             <Button variant="ghost" size="icon" asChild className={cn("transition-opacity duration-200 shrink-0", !isRightSidebarOpen && "w-0 opacity-0 hidden")}>
                 <a href="https://github.com/ja4tin/EasyInvoice" target="_blank" rel="noopener noreferrer" title="View on GitHub" className="group">
                     <Github className="w-5 h-5 transition-transform duration-300 group-hover:scale-125 group-hover:rotate-12" />
                 </a>
@@ -241,10 +269,22 @@ export const Layout = ({ children }: LayoutProps) => {
                 </Button>
             </div>
 
-            <div className={cn("flex-1 overflow-auto py-2 min-w-[280px] transition-opacity duration-200", !isLeftSidebarOpen && "opacity-0 invisible")}>
+            <div className={cn("flex-1 overflow-auto py-2 min-w-[280px] transition-opacity duration-200 flex flex-col justify-between", !isLeftSidebarOpen && "opacity-0 invisible")}>
                 <div className="px-4 py-2 space-y-4">
                     <UploadZone />
                     <UploadedFileList />
+                </div>
+                
+                {/* 底部固定区：手机扫码扫码入口 */}
+                <div className="px-4 py-4 mt-auto border-t border-border/50">
+                   <Button 
+                      variant="outline" 
+                      className="w-full border-primary/20 hover:border-primary/50 hover:bg-primary/5 text-primary font-medium flex items-center justify-center gap-2"
+                      onClick={() => setIsMobileUploadOpen(true)}
+                    >
+                      <Smartphone className="w-4 h-4" />
+                      手机扫码传图
+                   </Button>
                 </div>
             </div>
         </aside>
@@ -269,7 +309,7 @@ export const Layout = ({ children }: LayoutProps) => {
         </main>
         
         {/* 右侧边栏 */}
-        <PropertiesPanel />
+        <PropertiesPanel isOpen={isRightSidebarOpen} />
         
       </div>
 
@@ -282,6 +322,11 @@ export const Layout = ({ children }: LayoutProps) => {
         pdfUrl={pdfUrl}
         onDownload={handleDownload}
         isGenerating={isGenerating}
+      />
+
+      <QRCodeModal 
+        isOpen={isMobileUploadOpen}
+        onClose={() => setIsMobileUploadOpen(false)}
       />
     </div>
   );

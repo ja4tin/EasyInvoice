@@ -16,6 +16,7 @@ import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, RotateCw, RotateCcw, Crop, Info } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import {
   Tooltip,
   TooltipContent,
@@ -26,7 +27,11 @@ import { useGridLayout } from '@/features/editor/hooks/useGridLayout';
 import { useState } from 'react';
 import { ImageEditorModal } from './ImageEditorModal';
 
-export const PropertiesPanel = () => {
+interface PropertiesPanelProps {
+  isOpen?: boolean;
+}
+
+export const PropertiesPanel = ({ isOpen = true }: PropertiesPanelProps) => {
   const { 
     voucherData, 
     updateVoucherData, 
@@ -69,7 +74,7 @@ export const PropertiesPanel = () => {
 
   if (!voucherData) {
     return (
-      <aside className="hidden w-[280px] shrink-0 flex-col border-l bg-background md:flex">
+      <aside className={cn("shrink-0 flex-col border-l bg-background md:flex transition-all duration-300 ease-in-out", isOpen ? "w-[280px] min-w-[280px]" : "w-0 min-w-0 border-l-0 hidden")}>
          <div className="p-4">加载中...</div>
       </aside>
     )
@@ -82,7 +87,7 @@ export const PropertiesPanel = () => {
     const isActiveSize = (w: number, h: number) => currentW === w && currentH === h;
 
     return (
-      <aside className="hidden w-[280px] min-w-[280px] shrink-0 flex-col border-l bg-background md:flex overflow-hidden">
+      <aside className={cn("shrink-0 flex-col border-l bg-background md:flex overflow-hidden transition-all duration-300 ease-in-out", isOpen ? "w-[280px] min-w-[280px]" : "w-0 min-w-0 border-l-0 hidden")}>
         <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6 gap-2">
           <Button variant="ghost" size="icon" className="h-8 w-8 -ml-2" onClick={() => selectItem(null)}>
             <ArrowLeft className="h-4 w-4" />
@@ -211,7 +216,7 @@ export const PropertiesPanel = () => {
 
   // 默认凭单设置视图
   return (
-    <aside className="hidden w-[280px] min-w-[280px] shrink-0 flex-col border-l bg-background md:flex overflow-hidden">
+    <aside className={cn("shrink-0 flex-col border-l bg-background md:flex overflow-hidden transition-all duration-300 ease-in-out", isOpen ? "w-[280px] min-w-[280px]" : "w-0 min-w-0 border-l-0 hidden")}>
       {/* 头部 */}
       <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
         <h2 className="font-semibold">凭单设置</h2>

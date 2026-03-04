@@ -11,11 +11,11 @@ import { useRef } from "react";
 import { Layout } from "@/components/Layout";
 import { GridCanvas } from "@/features/editor/components/GridCanvas";
 import { DragDropProvider } from "@/providers/DragDropProvider";
+import { SpeedInsights } from "@vercel/speed-insights/react";
+import { useSettingsStore } from "@/store/useSettingsStore";
 import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
 import { useZoom } from "@/features/editor/hooks/useZoom";
 import { ZoomControls } from "@/features/editor/components/ZoomControls";
-import { useSettingsStore } from "@/store/useSettingsStore";
-import { SpeedInsights } from "@vercel/speed-insights/react";
 
 function App() {
   const containerRef = useRef<HTMLDivElement>(null);

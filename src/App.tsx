@@ -12,6 +12,7 @@ import { Layout } from "@/components/Layout";
 import { GridCanvas } from "@/features/editor/components/GridCanvas";
 import { DragDropProvider } from "@/providers/DragDropProvider";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { Analytics } from "@vercel/analytics/react";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
 import { useZoom } from "@/features/editor/hooks/useZoom";
@@ -81,6 +82,7 @@ function App() {
         <LoadingOverlay />
       </Layout>
       <SpeedInsights />
+      <Analytics />
     </DragDropProvider>
   );
 }

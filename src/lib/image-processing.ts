@@ -13,6 +13,19 @@ import PdfWorkerUrl from '../pdf.worker?worker&url';
 // 显式设置 worker 路径，适配 Vite 构建环境
 pdfjsLib.GlobalWorkerOptions.workerSrc = PdfWorkerUrl;
 
+// Monkey-patch FontFace API to map 'SimSun' to local Mac Chinese fonts
+// This prevents PDF.js from failing to load 'SimSun' which causes missing text in Chinese Invoices.
+if (typeof window !== 'undefined' && window.FontFace) {
+  const OriginalFontFace = window.FontFace;
+  window.FontFace = function(family: string, source: string, descriptors?: any) {
+    if (typeof source === 'string' && source.includes('SimSun')) {
+      source = `local("Songti SC"), local("STSong"), local("PingFang SC"), local("SimSun")`;
+    }
+    return new OriginalFontFace(family, source, descriptors);
+  } as any;
+  window.FontFace.prototype = OriginalFontFace.prototype;
+}
+
 /**
  * 将 File 对象转换为 Base64 字符串
  */
@@ -95,7 +108,12 @@ export const processImage = async (file: File): Promise<ProcessedImage> => {
  */
 export const processPdf = async (file: File): Promise<ProcessedImage[]> => {
   const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const pdf = await pdfjsLib.getDocument({
+    data: arrayBuffer,
+    cMapUrl: '/pdf-cmaps/',
+    cMapPacked: true,
+    standardFontDataUrl: '/pdf-fonts/',
+  }).promise;
   const pageCount = pdf.numPages;
   const processedImages: ProcessedImage[] = [];
 
